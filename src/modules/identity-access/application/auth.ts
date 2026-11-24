@@ -1,8 +1,8 @@
 import 'server-only';
 
 import { betterAuth } from 'better-auth';
-import { username } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { username } from 'better-auth/plugins';
 
 import { getDatabase } from '@/infrastructure/db/client';
 import { sendMail } from '@/infrastructure/email/mail-port';

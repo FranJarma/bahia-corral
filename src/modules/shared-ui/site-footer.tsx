@@ -1,9 +1,8 @@
 'use client';
 
-import type { MouseEvent } from 'react';
-
 import Image from 'next/image';
 import Link from 'next/link';
+import type { MouseEvent } from 'react';
 
 const explore = [
   { label: 'Alojamientos', href: '/alojamientos' },
@@ -26,7 +25,8 @@ function handleReturnToHome(event: MouseEvent<HTMLAnchorElement>) {
     event.shiftKey ||
     event.altKey ||
     event.button !== 0
-  ) return;
+  )
+    return;
   event.preventDefault();
   window.history.replaceState(window.history.state, '', '/');
   window.scrollTo({
@@ -41,7 +41,8 @@ export function SiteFooter() {
       <div className="public-container grid gap-10 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-12 md:py-20">
         <div>
           <Link
-            href="/" onClick={handleReturnToHome}
+            href="/"
+            onClick={handleReturnToHome}
             className="inline-block"
             aria-label="Bahía Corral, volver al hero de inicio"
           >

@@ -18,7 +18,10 @@ export function LoginForm() {
         setLoading(true);
         setError('');
         try {
-          const response = await authClient.signIn.username({ username: username.trim().toLowerCase(), password });
+          const response = await authClient.signIn.username({
+            username: username.trim().toLowerCase(),
+            password,
+          });
           if (response.error)
             setError('No fue posible iniciar sesión. Revisá tus datos o verificá tu correo.');
           else window.location.assign('/admin');
@@ -52,7 +55,10 @@ export function LoginForm() {
         />
       </label>
       <div className="flex justify-end">
-        <Link href="/admin/recuperar-contrasena" className="text-xs font-semibold text-ink underline underline-offset-4">
+        <Link
+          href="/admin/recuperar-contrasena"
+          className="text-xs font-semibold text-ink underline underline-offset-4"
+        >
           ¿Olvidaste tu contraseña?
         </Link>
       </div>

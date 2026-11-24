@@ -1,7 +1,8 @@
 'use client';
 
-import { authClient as auth } from '@/modules/identity-access/ui/auth-client';
 import { useState } from 'react';
+
+import { authClient as auth } from '@/modules/identity-access/ui/auth-client';
 
 export function InvitationForm({ token }: { token: string }) {
   const [email, setEmail] = useState('');
@@ -17,7 +18,12 @@ export function InvitationForm({ token }: { token: string }) {
     setMessage('');
     try {
       if (mode === 'register') {
-        const response = await auth.signUp.email({ name, email, username: username.trim().toLowerCase(), password });
+        const response = await auth.signUp.email({
+          name,
+          email,
+          username: username.trim().toLowerCase(),
+          password,
+        });
         if (response.error) throw new Error('No pudimos registrar la cuenta. Revisá los datos.');
         setMode('accept');
         setMessage(

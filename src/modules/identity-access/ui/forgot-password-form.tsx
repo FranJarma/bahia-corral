@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 
 import { authClient } from '@/modules/identity-access/ui/auth-client';
 
@@ -66,7 +66,10 @@ export function ForgotPasswordForm() {
       <button className="primary-button w-full" type="submit" disabled={sending}>
         {sending ? 'Enviando…' : 'Enviar enlace de recuperación'}
       </button>
-      <Link href="/admin/login" className="text-center text-xs font-semibold underline underline-offset-4">
+      <Link
+        href="/admin/login"
+        className="text-center text-xs font-semibold underline underline-offset-4"
+      >
         Volver al acceso
       </Link>
     </form>
