@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 type Unit = { unit_id: string; name: string; cleaning: string; guest_name: string|null; checkin: string|null; checkout: string|null; reservation_status: string|null };
 function todayString(){return new Intl.DateTimeFormat('en-CA',{year:'numeric',month:'2-digit',day:'2-digit',timeZone:'America/Argentina/Buenos_Aires'}).format(new Date());}
 export function ReceptionScreen() {
+  const [today,setToday]=useState(()=>todayString());
   const [units,setUnits]=useState<Unit[]>([]);
   const [updated,setUpdated]=useState('');
   const [error,setError]=useState('');
@@ -13,10 +14,9 @@ export function ReceptionScreen() {
     const response=await fetch('/api/admin/reception',{cache:'no-store'});
     const data=await response.json() as {units:Unit[];lastUpdated:string;error?:string};
     if(!response.ok)throw new Error(data.error??'No se pudo actualizar la pantalla');
-    setUnits(data.units);setUpdated(data.lastUpdated);setError('');
+    setUnits(data.units);setUpdated(data.lastUpdated);setToday(todayString());setError('');
   }catch(reason){setError(reason instanceof Error?reason.message:'No se pudo cargar recepción');}}
   useEffect(()=>{queueMicrotask(()=>void refresh());const timer=window.setInterval(()=>void refresh(),15_000);return ()=>window.clearInterval(timer);},[]);
-  const today=todayString();
   const arrivals=units.filter(unit=>unit.checkin===today&&unit.guest_name);
   const departures=units.filter(unit=>unit.checkout===today&&unit.guest_name);
   return <div>

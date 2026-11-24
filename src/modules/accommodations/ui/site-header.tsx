@@ -52,7 +52,7 @@ export function SiteHeader() {
       {open && (
         <div id="public-mobile-menu" role="dialog" aria-modal="true" aria-label="Menú de navegación" className="fixed inset-0 z-[70] overflow-y-auto bg-cream px-6 pb-[max(24px,env(safe-area-inset-bottom))]">
           <div className="flex h-[90px] items-center justify-between">
-            <Link href="/" aria-label="Inicio"><Image src="/images/logo-bahia-corral.png" alt="Bahía Corral" width={105} height={88} className="h-[76px] w-auto object-contain"/></Link>
+            <Link href="/" aria-label="Inicio" onClick={() => setOpen(false)}><Image src="/images/logo-bahia-corral.png" alt="Bahía Corral" width={105} height={88} className="h-[76px] w-auto object-contain"/></Link>
             <button type="button" aria-label="Cerrar menú" className="flex h-11 w-11 items-center justify-center" onClick={() => { setOpen(false); opener.current?.focus(); }}><X size={26}/></button>
           </div>
           <nav aria-label="Secciones" className="mt-10 flex flex-col gap-1">

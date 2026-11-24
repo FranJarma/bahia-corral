@@ -16,6 +16,7 @@ function formatDate(value: string) {
 
 export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
   const router = useRouter();
+  const [today] = useState(() => nextDate(0));
   const [checkin, setCheckin] = useState(() => nextDate(1));
   const [checkout, setCheckout] = useState(() => nextDate(2));
   const [adults, setAdults] = useState(2);
@@ -35,7 +36,7 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
         <label className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 md:w-[170px]'}`}>
           <CalendarDays className="shrink-0" size={17} aria-hidden="true"/>
           <span className="flex min-w-0 flex-1 flex-col"><span className="text-[10px] font-semibold text-muted">Llegada</span><span className="truncate text-xs font-medium">{formatDate(checkin)}</span></span>
-          <input type="date" aria-label="Llegada" value={checkin} min={nextDate(0)} onChange={(event) => { setCheckin(event.target.value); if (event.target.value >= checkout) { const date = new Date(`${event.target.value}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + 1); setCheckout(date.toISOString().slice(0, 10)); } }} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+          <input type="date" aria-label="Llegada" value={checkin} min={today} onChange={(event) => { setCheckin(event.target.value); if (event.target.value >= checkout) { const date = new Date(`${event.target.value}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + 1); setCheckout(date.toISOString().slice(0, 10)); } }} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
           <ChevronDown size={13} aria-hidden="true"/>
         </label>
         <span aria-hidden="true" className="my-auto hidden h-6 w-px bg-[#ddcdb8] md:block" />
