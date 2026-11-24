@@ -4,17 +4,10 @@ import nextTs from 'eslint-config-next/typescript';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import unusedImports from 'eslint-plugin-unused-imports';
 
-export default [
+const config = [
   ...nextCoreWebVitals,
   ...nextTs,
-  globalIgnores([
-    '.next/**',
-    'out/**',
-    'build/**',
-    'coverage/**',
-    'playwright-report/**',
-    'test-results/**',
-  ]),
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'playwright-report/**', 'test-results/**']),
   {
     files: ['**/*.{js,mjs,ts,tsx}'],
     plugins: { 'simple-import-sort': simpleImportSort, 'unused-imports': unusedImports },
@@ -27,3 +20,5 @@ export default [
     },
   },
 ];
+
+export default config;
