@@ -7,7 +7,14 @@ import unusedImports from 'eslint-plugin-unused-imports';
 const config = [
   ...nextCoreWebVitals,
   ...nextTs,
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'coverage/**', 'playwright-report/**', 'test-results/**']),
+  globalIgnores([
+    '.next/**',
+    'out/**',
+    'build/**',
+    'coverage/**',
+    'playwright-report/**',
+    'test-results/**',
+  ]),
   {
     files: ['**/*.{js,mjs,ts,tsx}'],
     plugins: { 'simple-import-sort': simpleImportSort, 'unused-imports': unusedImports },
