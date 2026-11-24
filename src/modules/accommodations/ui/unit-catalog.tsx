@@ -21,7 +21,6 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
           <Link
             href={`/alojamientos/${unit.slug}`}
             className="block"
-            aria-label={`Ver ${unit.name}`}
           >
             <div className="relative aspect-[1.33] overflow-hidden bg-sand">
               <Image
