@@ -1,8 +1,12 @@
 import { sql } from 'drizzle-orm';
 
 import { appendAuditEvent } from '@/infrastructure/audit/append-audit-event';
-import { resultRows, runTenantTx, type TenantContext } from '@/infrastructure/db/tenant-transaction';
-import { requirePermission, type ActorRole } from '@/modules/identity-access/domain/permissions';
+import {
+  resultRows,
+  runTenantTx,
+  type TenantContext,
+} from '@/infrastructure/db/tenant-transaction';
+import { type ActorRole, requirePermission } from '@/modules/identity-access/domain/permissions';
 
 export type RegisterManualPaymentInput = {
   reservationId: string;
@@ -64,7 +68,10 @@ export async function registerManualPayment(
       ) {
         throw new Error('Conflicto de idempotencia: el reintento tiene datos diferentes');
       }
-      return { paymentId: existing.id, confirmation: reservation.status === 'CONFIRMED' ? 'CONFIRMED' : 'PENDING' };
+      return {
+        paymentId: existing.id,
+        confirmation: reservation.status === 'CONFIRMED' ? 'CONFIRMED' : 'PENDING',
+      };
     }
 
     await appendAuditEvent(tx, {
