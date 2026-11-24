@@ -1,9 +1,10 @@
+import { createHash } from 'node:crypto';
 import {randomUUID} from 'node:crypto';
 import {sql} from 'drizzle-orm';
 import {resultRows,runTenantTx,type TenantContext} from '@/infrastructure/db/tenant-transaction';
 import {createMercadoPagoGateway} from '@/modules/payments/integrations/mercadopago';
 
-export async function createPaymentRequest(ctx:TenantContext,input:{reservationId:string;purpose:'DEPOSIT'|'FULL'|'BALANCE'}){
+export async function createPaymentRequest(ctx:TenantContext,input:{reservationId:string;purpose:'DEPOSIT'|'FULL'|'BALANCE';checkoutToken:string}){
   const record=await runTenantTx(ctx,async tx=>{
     const [reservation]=resultRows<{reference:string;quote_id:string;status:string;deposit_cents:string;amount_cents:string;email:string|null}>(await tx.execute(sql`
       SELECT r.reference,r.quote_id,r.status,q.deposit_cents::text,q.amount_cents::text,g.email
@@ -11,6 +12,21 @@ export async function createPaymentRequest(ctx:TenantContext,input:{reservationI
       JOIN guests g ON g.tenant_id=r.tenant_id AND g.id=r.guest_id
       WHERE r.tenant_id=${ctx.tenantId} AND r.id=${input.reservationId} FOR UPDATE OF r`));
     if(!reservation||!reservation.email)throw new Error('La reserva necesita un correo válido para pagar online');
+    const hashed=createHash('sha256').update(input.checkoutToken).digest('hex');
+    const [hold]=resultRows<{id:string;status:string;expires_at:Date}>(await tx.execute(sql`
+      SELECT id,status,expires_at FROM reservation_holds
+      WHERE tenant_id=${ctx.tenantId} AND reservation_id=${input.reservationId}
+      AND checkout_token_hash=${hashed} FOR UPDATE`));
+    if (!hold || !['ACTIVE','VERIFYING','UNCERTAIN'].includes(hold.status)) {
+      throw new Error('El checkout ya no está disponible');
+    }
+    if (hold.status==='ACTIVE' && new Date(hold.expires_at).getTime()<Date.now()) {
+      throw new Error('El checkout venció antes de iniciar el pago');
+    }
+    // Bloqueo de conciliación: la consulta a Mercado Pago puede finalizar después del décimo minuto.
+    await tx.execute(sql`UPDATE reservation_holds SET status='VERIFYING',payment_started_at=COALESCE(payment_started_at,now()),
+      verification_deadline=COALESCE(verification_deadline,expires_at+interval '5 minutes')
+      WHERE tenant_id=${ctx.tenantId} AND id=${hold.id}`);
     if(!['PENDING_CONFIRMATION','CONFIRMED'].includes(reservation.status))throw new Error('La reserva ya no permite este cobro');
     const [paid]=resultRows<{total:string}>(await tx.execute(sql`SELECT COALESCE(SUM(amount_cents),0)::text AS total FROM payments WHERE tenant_id=${ctx.tenantId} AND reservation_id=${input.reservationId}`));
     const remaining=BigInt(reservation.amount_cents)-BigInt(paid.total);

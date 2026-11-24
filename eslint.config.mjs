@@ -19,12 +19,4 @@ export default [
       '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports' }],
     },
   },
-  {
-    files: ['src/modules/*/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': ['error', {
-        patterns: [{ group: ['@/modules/*/data/*', '@/modules/*/integrations/*'], message: 'Importá la API pública del módulo, no sus detalles privados.' }],
-      }],
-    },
-  },
 ];

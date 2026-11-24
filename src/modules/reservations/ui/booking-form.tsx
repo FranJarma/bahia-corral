@@ -5,7 +5,7 @@ import {useEffect,useMemo,useState} from 'react';
 import {PUBLIC_UNITS} from '@/modules/accommodations/domain/seed-units';
 
 type Step='DATES'|'CONTACT'|'PAYMENT';
-type Hold={holdId:string;quoteId:string;expiresAt:string;totalCents:string;depositCents:string};
+type Hold={holdId:string;quoteId:string;expiresAt:string;totalCents:string;depositCents:string;checkoutToken:string};
 type ApiError={error?:string};
 async function post<T>(path:string,body:unknown):Promise<T>{
   const response=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),cache:'no-store'});
@@ -23,7 +23,7 @@ export function BookingForm({defaultSlug}:{defaultSlug?:string}){
   const [reservationId,setReservationId]=useState('');const [purpose,setPurpose]=useState<'DEPOSIT'|'FULL'>('DEPOSIT');
   const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [clock,setClock]=useState(Date.now());
   const unit=useMemo(()=>PUBLIC_UNITS.find(u=>u.slug===slug),[slug]);
-  useEffect(()=>{setUnitId('');fetch(`/api/public/units?slug=${encodeURIComponent(slug)}`,{cache:'no-store'}).then(async r=>{if(!r.ok)throw new Error('Servicio de reservas no configurado');const value=await r.json() as {unit:{id:string}};setUnitId(value.unit.id);}).catch(()=>setError('La consulta de disponibilidad requiere la conexión con el sistema de reservas.'));},[slug]);
+  useEffect(()=>{queueMicrotask(()=>{setUnitId('');fetch(`/api/public/units?slug=${encodeURIComponent(slug)}`,{cache:'no-store'}).then(async r=>{if(!r.ok)throw new Error('Servicio de reservas no configurado');const value=await r.json() as {unit:{id:string}};setUnitId(value.unit.id);}).catch(()=>setError('La consulta de disponibilidad requiere la conexión con el sistema de reservas.'));});},[slug]);
   useEffect(()=>{if(!hold)return;const id=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(id);},[hold]);
   const seconds=hold?Math.max(0,Math.floor((new Date(hold.expiresAt).valueOf()-clock)/1000)):0;
   const expired=Boolean(hold&&seconds===0&&step==='CONTACT');
@@ -33,11 +33,11 @@ export function BookingForm({defaultSlug}:{defaultSlug?:string}){
     setHold(next);setClock(Date.now());setStep('CONTACT');
   }catch(e){setError(e instanceof Error?e.message:'Error de reserva');}finally{setBusy(false);}}
   async function continuePayment(){if(!hold||expired)return;setBusy(true);setError('');try{
-    const result=await post<{reservationId:string}>('/api/public/checkout/guest',{holdId:hold.holdId,contact:{firstName,lastName,email,phone}});
+    const result=await post<{reservationId:string}>('/api/public/checkout/guest',{holdId:hold.holdId,checkoutToken:hold.checkoutToken,contact:{firstName,lastName,email,phone}});
     setReservationId(result.reservationId);setStep('PAYMENT');
   }catch(e){setError(e instanceof Error?e.message:'Error de reserva');}finally{setBusy(false);}}
   async function checkout(){setBusy(true);setError('');try{
-    const result=await post<{checkoutUrl:string}>('/api/public/checkout/pay',{reservationId,purpose});
+    const result=await post<{checkoutUrl:string}>('/api/public/checkout/pay',{reservationId,purpose,checkoutToken:hold?.checkoutToken});
     if(!result.checkoutUrl.startsWith('https://'))throw new Error('URL de pago inválida');
     window.location.assign(result.checkoutUrl);
   }catch(e){setError(e instanceof Error?e.message:'Error al iniciar el pago');}finally{setBusy(false);}}

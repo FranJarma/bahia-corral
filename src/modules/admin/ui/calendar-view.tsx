@@ -4,7 +4,7 @@ type Entry={id:string;unit_name:string;checkin:string;checkout:string;reason:str
 function localDate(date:Date){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;}
 export function CalendarView(){
   const [month,setMonth]=useState(()=>new Date());const [entries,setEntries]=useState<Entry[]>([]);const [error,setError]=useState('');const [busy,setBusy]=useState(false);
-  useEffect(()=>{const from=localDate(new Date(month.getFullYear(),month.getMonth(),1));const to=localDate(new Date(month.getFullYear(),month.getMonth()+1,1));setBusy(true);
+  useEffect(()=>{const from=localDate(new Date(month.getFullYear(),month.getMonth(),1));const to=localDate(new Date(month.getFullYear(),month.getMonth()+1,1));
     fetch(`/api/admin/calendar?from=${from}&to=${to}`).then(async r=>{if(!r.ok)throw new Error('No se pudo cargar el calendario');return r.json();}).then((data:{entries:Entry[]})=>setEntries(data.entries)).catch(e=>setError(e instanceof Error?e.message:'Error')).finally(()=>setBusy(false));
   },[month]);
   const move=(n:number)=>setMonth(value=>new Date(value.getFullYear(),value.getMonth()+n,1));

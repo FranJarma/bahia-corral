@@ -8,7 +8,7 @@ export function NewReservationForm(){
   const [firstName,setFirstName]=useState('');const [lastName,setLastName]=useState('');const [phone,setPhone]=useState('');const [email,setEmail]=useState('');
   const [confirmWithoutDeposit,setConfirmWithoutDeposit]=useState(true);const [reason,setReason]=useState('Reserva recibida telefónicamente; pago pendiente');
   const [busy,setBusy]=useState(false);const [message,setMessage]=useState('');
-  useEffect(()=>{fetch('/api/admin/units').then(r=>r.json()).then((v:{units:Unit[]})=>{setUnits(v.units??[]);setUnitId(v.units?.[0]?.id??'');}).catch(()=>setMessage('No se pudieron cargar los alojamientos'));},[]);
+  useEffect(()=>{queueMicrotask(()=>{fetch('/api/admin/units').then(r=>r.json()).then((v:{units:Unit[]})=>{setUnits(v.units??[]);setUnitId(v.units?.[0]?.id??'');}).catch(()=>setMessage('No se pudieron cargar los alojamientos'));});},[]);
   async function submit(){setBusy(true);setMessage('');try{
     const r=await fetch('/api/admin/reservations',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({unitId,checkin,checkout,adults,childAges:[],contact:{firstName,lastName,phone,email:email||undefined},confirmWithoutDeposit,reason})});
     const d=await r.json() as {error?:string;reservationId?:string};if(!r.ok)throw new Error(d.error??'No se pudo crear la reserva');

@@ -130,6 +130,7 @@ CREATE TABLE IF NOT EXISTS reservation_holds (
   unit_id uuid NOT NULL, quote_id uuid NOT NULL, reservation_id uuid,
   expires_at timestamptz NOT NULL, verification_deadline timestamptz,
   payment_started_at timestamptz,
+  checkout_token_hash text UNIQUE,
   status text NOT NULL DEFAULT 'ACTIVE' CHECK(status IN ('ACTIVE','VERIFYING','UNCERTAIN','EXPIRED','CONVERTED','REJECTED')),
   created_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY(tenant_id,unit_id) REFERENCES accommodation_units(tenant_id,id),

@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 
 import { appendAuditEvent } from '@/infrastructure/audit/append-audit-event';
@@ -7,7 +8,7 @@ import { getQuoteInput } from '@/modules/pricing/application/get-quote';
 import { quoteStay, quoteToRecord } from '@/modules/pricing/domain/pricing-engine';
 
 export type StartCheckoutInput={unitId:string;checkin:string;checkout:string;adults:number;childAges:number[]};
-export type CheckoutHold={holdId:string;quoteId:string;expiresAt:string;totalCents:string;depositCents:string};
+export type CheckoutHold={holdId:string;quoteId:string;expiresAt:string;totalCents:string;depositCents:string;checkoutToken:string};
 
 /** Libera únicamente holds sin pago iniciado. Nunca toca VERIFYING ni UNCERTAIN. */
 export async function releaseExpiredHolds(ctx:TenantContext, unitId?:string):Promise<number>{
@@ -32,16 +33,18 @@ export async function startCheckout(ctx:TenantContext,input:StartCheckoutInput):
   await releaseExpiredHolds(ctx,input.unitId);
   return runTenantTx(ctx,async tx=>{
     const quoteId=crypto.randomUUID();const holdId=crypto.randomUUID();
+    const checkoutToken=randomBytes(32).toString('base64url');
+    const tokenHash=createHash('sha256').update(checkoutToken).digest('hex');
     const expiresAt=holdExpiresAt(new Date());
     await tx.execute(sql`INSERT INTO stay_quotes(id,tenant_id,unit_id,checkin,checkout,adults,child_ages,nights,amount_cents,deposit_cents,currency,terms_version)
       VALUES(${quoteId},${ctx.tenantId},${quote.unitId},${quote.checkin}::date,${quote.checkout}::date,${quote.adults},
         ${quote.childAges},${JSON.stringify(serialized.nights)}::jsonb,${serialized.totalCents},${serialized.depositCents},'ARS','v1')`);
-    await tx.execute(sql`INSERT INTO reservation_holds(id,tenant_id,unit_id,quote_id,expires_at,status)
-      VALUES(${holdId},${ctx.tenantId},${quote.unitId},${quoteId},${expiresAt.toISOString()}::timestamptz,'ACTIVE')`);
+    await tx.execute(sql`INSERT INTO reservation_holds(id,tenant_id,unit_id,quote_id,expires_at,checkout_token_hash,status)
+      VALUES(${holdId},${ctx.tenantId},${quote.unitId},${quoteId},${expiresAt.toISOString()}::timestamptz,${tokenHash},'ACTIVE')`);
     // Exclusión GiST en PostgreSQL decide quién gana si llegan dos peticiones simultáneas.
     await tx.execute(sql`INSERT INTO inventory_allocations(tenant_id,unit_id,checkin,checkout,reason,hold_id,active)
       VALUES(${ctx.tenantId},${quote.unitId},${quote.checkin}::date,${quote.checkout}::date,'HOLD',${holdId},true)`);
-    return {holdId,quoteId,expiresAt:expiresAt.toISOString(),totalCents:serialized.totalCents,depositCents:serialized.depositCents};
+    return {holdId,quoteId,expiresAt:expiresAt.toISOString(),totalCents:serialized.totalCents,depositCents:serialized.depositCents,checkoutToken};
   });
 }
 

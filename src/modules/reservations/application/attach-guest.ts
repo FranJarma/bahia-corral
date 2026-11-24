@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 
@@ -5,19 +6,20 @@ import { resultRows, runTenantTx, type TenantContext } from '@/infrastructure/db
 
 export type GuestContact={firstName:string;lastName:string;phone:string;email?:string};
 export type ReservationOrigin='WEB'|'PHONE'|'WHATSAPP'|'FRONT_DESK';
-export type AttachGuestInput={holdId:string; contact:GuestContact; origin:ReservationOrigin; balanceDuePolicy?:'AT_CHECKIN'|'BEFORE_24H'};
+export type AttachGuestInput={holdId:string; checkoutToken:string; contact:GuestContact; origin:ReservationOrigin; balanceDuePolicy?:'AT_CHECKIN'|'BEFORE_24H'};
 
 /** No confundir la reserva pendiente con un hold. Una búsqueda no crea reserva. */
 export async function attachGuestToHold(ctx:TenantContext,input:AttachGuestInput):Promise<{reservationId:string;reference:string}>{
   if(!input.contact.firstName.trim()||!input.contact.lastName.trim()||!input.contact.phone.trim())throw new Error('Nombre, apellido y teléfono son obligatorios');
   if(input.origin==='WEB'&&!/^\S+@\S+\.\S+$/.test(input.contact.email??''))throw new Error('Se necesita email para la reserva web');
   return runTenantTx(ctx,async tx=>{
-    const current=resultRows<{unit_id:string;quote_id:string;status:string;expires_at:Date;reservation_id:string|null}>(await tx.execute(sql`
-      SELECT unit_id,quote_id,status,expires_at,reservation_id FROM reservation_holds
+    const current=resultRows<{unit_id:string;quote_id:string;status:string;expires_at:Date;reservation_id:string|null;checkout_token_hash:string|null}>(await tx.execute(sql`
+      SELECT unit_id,quote_id,status,expires_at,reservation_id,checkout_token_hash FROM reservation_holds
       WHERE tenant_id=${ctx.tenantId} AND id=${input.holdId} FOR UPDATE
     `));
     const hold=current[0];
-    if(!hold||hold.status!=='ACTIVE'||new Date(hold.expires_at).valueOf()<=Date.now()||hold.reservation_id)throw new Error('El bloqueo ya no está disponible');
+    if(!hold||hold.status!=='ACTIVE'||new Date(hold.expires_at).valueOf()<=Date.now()||hold.reservation_id||
+      !hold.checkout_token_hash||createHash('sha256').update(input.checkoutToken).digest('hex')!==hold.checkout_token_hash)throw new Error('El bloqueo ya no está disponible');
     const guestId=randomUUID(); const reservationId=randomUUID();
     const reference=`BC-${new Date().getUTCFullYear()}-${reservationId.slice(0,8).toUpperCase()}`;
     await tx.execute(sql`INSERT INTO guests(id,tenant_id,first_name,last_name,email,phone)

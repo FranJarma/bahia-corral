@@ -23,7 +23,7 @@ export async function POST(request:NextRequest){try{
   requirePermission(actor.role,'reservations:write');const body=await jsonInput(request,input);
   const ctx={tenantId:actor.tenantId,actorId:actor.userId,actorType:'USER' as const};
   const hold=await startCheckout(ctx,{unitId:body.unitId,checkin:body.checkin,checkout:body.checkout,adults:body.adults,childAges:body.childAges});
-  const reservation=await attachGuestToHold(ctx,{holdId:hold.holdId,contact:body.contact,origin:'PHONE'});
+  const reservation=await attachGuestToHold(ctx,{holdId:hold.holdId,checkoutToken:hold.checkoutToken,contact:body.contact,origin:'PHONE'});
   if(body.confirmWithoutDeposit){await confirmReservation(ctx,{reservationId:reservation.reservationId,exceptional:{reason:body.reason??'',role:actor.role}});}
   return successJson(reservation,201);
 }catch(error){return failResponse(error);}}
