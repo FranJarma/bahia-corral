@@ -15,12 +15,17 @@ function nextDate(offset: number) {
 }
 function formatDate(value: string) {
   if (!value) return 'Elegí una fecha';
-  return new Intl.DateTimeFormat('es-AR', {
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.getTime())) return 'Elegí una fecha';
+  const parts = new Intl.DateTimeFormat('es-AR', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
     timeZone: 'UTC',
-  }).format(new Date(`${value}T12:00:00Z`));
+  }).formatToParts(date);
+  const getPart = (type: 'day' | 'month' | 'year') =>
+    parts.find((part) => part.type === type)?.value ?? '';
+  return `${getPart('day')} ${getPart('month').replace('.', '')} ${getPart('year')}`;
 }
 
 export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
@@ -50,15 +55,15 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
   return (
     <div className={`relative ${compact ? 'mx-auto max-w-[360px]' : 'w-full max-w-[884px]'}`}>
       <div
-        className={`${compact ? 'flex-col gap-2 p-2' : 'flex-col p-2 md:flex-row md:items-center md:gap-0'} flex rounded-2xl border border-[#dacbb7] bg-[#fcfaf6] shadow-[0_6px_22px_#17374719]`}
+        className={`${compact ? 'flex-col gap-2 p-2' : 'flex-col p-2 lg:flex-row lg:items-center lg:gap-0 lg:p-[6px]'} flex rounded-2xl border border-[#dacbb7] bg-[#fcfaf6] shadow-[0_6px_22px_#17374719]`}
       >
         <label
-          className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 md:w-[170px]'}`}
+          className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 lg:h-[46px] lg:w-[170px] lg:shrink-0'}`}
         >
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[10px] font-semibold text-muted">Llegada</span>
-            <span className="truncate text-xs font-medium">{formatDate(checkin)}</span>
+            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">{formatDate(checkin)}</span>
           </span>
           <input
             type="date"
@@ -77,14 +82,14 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           />
           <ChevronDown size={13} aria-hidden="true" />
         </label>
-        <span aria-hidden="true" className="my-auto hidden h-6 w-px bg-[#ddcdb8] md:block" />
+        <span aria-hidden="true" className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block" />
         <label
-          className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 md:w-[170px]'}`}
+          className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 lg:h-[46px] lg:w-[170px] lg:shrink-0'}`}
         >
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[10px] font-semibold text-muted">Salida</span>
-            <span className="truncate text-xs font-medium">{formatDate(checkout)}</span>
+            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">{formatDate(checkout)}</span>
           </span>
           <input
             type="date"
@@ -96,9 +101,9 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           />
           <ChevronDown size={13} aria-hidden="true" />
         </label>
-        <span aria-hidden="true" className="my-auto hidden h-6 w-px bg-[#ddcdb8] md:block" />
+        <span aria-hidden="true" className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block" />
         <div
-          className={`relative flex min-w-0 items-center ${compact ? 'h-[46px]' : 'h-12 md:w-[300px]'}`}
+          className={`relative flex min-w-0 items-center ${compact ? 'h-[46px]' : 'h-12 lg:h-[46px] lg:w-[300px] lg:shrink-0'}`}
         >
           <button
             type="button"
@@ -168,7 +173,7 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
         <button
           type="button"
           onClick={search}
-          className={`primary-button shrink-0 text-[11px] uppercase tracking-[.015em] ${compact ? 'w-full' : 'md:ml-auto md:min-h-[46px] md:px-6'}`}
+          className={`primary-button shrink-0 text-[11px] uppercase tracking-[.015em] ${compact ? 'w-full' : 'lg:ml-auto lg:!min-h-[46px] lg:w-[229px] lg:px-4'}`}
         >
           Buscar disponibilidad <ArrowRight size={16} />
         </button>

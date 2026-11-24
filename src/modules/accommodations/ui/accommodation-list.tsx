@@ -34,49 +34,49 @@ export function AccommodationList() {
   }, [type, capacity, search, sort]);
 
   return (
-    <div className="grid gap-7 lg:grid-cols-[220px_minmax(0,1fr)]">
+    <div className="grid items-start gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
       <button
         type="button"
         aria-expanded={filtersOpen}
         onClick={() => setFiltersOpen(!filtersOpen)}
-        className="secondary-button flex w-full items-center justify-between lg:hidden"
+        className="flex min-h-12 w-full items-center justify-between rounded-xl border border-[#e6ddce] bg-[#fcf9f3] px-4 text-sm font-semibold text-ink lg:!hidden"
       >
         <span>Filtrar alojamientos</span>
         <SlidersHorizontal size={17} />
       </button>
       <aside
-        className={`${filtersOpen ? 'block' : 'hidden'} h-fit rounded-xl bg-[#fcfaf6] p-5 lg:block`}
+        className={`${filtersOpen ? 'block' : 'hidden'} h-fit w-full min-w-0 rounded-[16px] border border-[#e6ddce] bg-[#fcf9f3] p-5 lg:!block`}
         aria-label="Filtros de alojamientos"
       >
-        <h2 className="mb-5 text-[11px] font-bold uppercase tracking-[.16em]">Filtrar por</h2>
-        <fieldset className="border-t border-[#e8e0d6] pt-5">
-          <legend className="text-[11px] font-semibold uppercase tracking-widest">Tipo</legend>
-          <div className="mt-3 grid gap-3 text-xs text-muted">
+        <h2 className="mb-4 text-[11.5px] font-medium uppercase tracking-[.18em] text-[#8b9498]">Filtrar por</h2>
+        <fieldset className="min-w-0 border-t border-[#e6ddce] pt-4">
+          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">Tipo</legend>
+          <div className="mt-2 grid gap-1 text-[12.5px] leading-5 text-muted">
             {choices.map((choice) => (
-              <label key={choice.value} className="flex cursor-pointer items-center gap-2">
+              <label key={choice.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 py-1">
                 <input
                   type="radio"
                   checked={type === choice.value}
                   onChange={() => setType(choice.value)}
                   name="unitType"
-                  className="!h-4 !min-h-0 !w-4 accent-[#173747]"
+                  className="!h-4 !min-h-0 !w-4 shrink-0 accent-[#173747]"
                 />
                 {choice.label}
               </label>
             ))}
           </div>
         </fieldset>
-        <fieldset className="mt-6 border-t border-[#e8e0d6] pt-5">
-          <legend className="text-[11px] font-semibold uppercase tracking-widest">Capacidad</legend>
-          <div className="mt-3 grid gap-3 text-xs text-muted">
+        <fieldset className="mt-5 min-w-0 border-t border-[#e6ddce] pt-4">
+          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">Capacidad</legend>
+          <div className="mt-2 grid gap-1 text-[12.5px] leading-5 text-muted">
             {[0, 2, 4, 6, 8].map((value) => (
-              <label key={value} className="flex cursor-pointer items-center gap-2">
+              <label key={value} className="flex min-h-8 cursor-pointer items-center gap-2.5 py-1">
                 <input
                   type="radio"
                   checked={capacity === value}
                   onChange={() => setCapacity(value)}
                   name="capacity"
-                  className="!h-4 !min-h-0 !w-4 accent-[#173747]"
+                  className="!h-4 !min-h-0 !w-4 shrink-0 accent-[#173747]"
                 />
                 {value === 0 ? 'Todas' : `Al menos ${value} personas`}
               </label>
@@ -91,7 +91,7 @@ export function AccommodationList() {
             setSearch('');
             setSort('all');
           }}
-          className="mt-7 text-xs font-semibold text-ink underline underline-offset-4"
+          className="mt-5 text-xs font-semibold text-ink underline underline-offset-4"
         >
           Limpiar filtros
         </button>

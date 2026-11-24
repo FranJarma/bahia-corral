@@ -55,7 +55,7 @@ export function SiteHeader() {
                 href={item.href}
                 key={item.href}
                 aria-current={item.href === path ? 'page' : undefined}
-                className={`text-[10px] font-semibold uppercase tracking-[.12em] transition-colors hover:text-ink ${item.href === path ? 'text-ink' : 'text-[#68767a]'}`}
+                className={`text-[11.5px] uppercase tracking-[.08em] transition-colors hover:text-ink ${item.href === path ? 'font-bold text-ink' : 'font-medium text-[#68767a]'}`}
               >
                 {item.label}
               </Link>
@@ -132,7 +132,7 @@ export function SiteHeader() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 ref={index === 0 ? firstLink : undefined}
-                className={`border-b border-[#dfd4c5] px-1 py-5 text-lg font-medium ${item.href === path ? 'text-ink' : 'text-muted'}`}
+                className={`border-b border-[#dfd4c5] px-1 py-5 text-lg ${item.href === path ? 'font-bold text-ink' : 'font-medium text-muted'}`}
               >
                 {item.label}
               </Link>
