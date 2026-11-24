@@ -276,3 +276,14 @@ textarea::placeholder {
     animation-duration: 0s !important;
   }
 }
+
+/* Figma M / Inicio: Montserrat Regular 12px/18px, without uppercase tracking. */
+@media (max-width: 767px) {
+  .public-kicker.hero-mobile-kicker {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+}
