@@ -21,7 +21,7 @@ export function BookingForm({defaultSlug}:{defaultSlug?:string}){
   const [step,setStep]=useState<Step>('DATES');const [hold,setHold]=useState<Hold|null>(null);
   const [firstName,setFirstName]=useState('');const [lastName,setLastName]=useState('');const [email,setEmail]=useState('');const [phone,setPhone]=useState('');
   const [reservationId,setReservationId]=useState('');const [purpose,setPurpose]=useState<'DEPOSIT'|'FULL'>('DEPOSIT');
-  const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [clock,setClock]=useState(Date.now());
+  const [busy,setBusy]=useState(false);const [error,setError]=useState('');const [clock,setClock]=useState<number>(0);
   const unit=useMemo(()=>PUBLIC_UNITS.find(u=>u.slug===slug),[slug]);
   useEffect(()=>{queueMicrotask(()=>{setUnitId('');fetch(`/api/public/units?slug=${encodeURIComponent(slug)}`,{cache:'no-store'}).then(async r=>{if(!r.ok)throw new Error('Servicio de reservas no configurado');const value=await r.json() as {unit:{id:string}};setUnitId(value.unit.id);}).catch(()=>setError('La consulta de disponibilidad requiere la conexión con el sistema de reservas.'));});},[slug]);
   useEffect(()=>{if(!hold)return;const id=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(id);},[hold]);
