@@ -60,11 +60,11 @@ export default function HomePage() {
               className="h-auto w-[139px]"
             />
           </div>
-          <p className="public-kicker mt-3 md:mt-6">Experiencias únicas en el Dique Cabra Corral</p>
-          <h1 className="editorial mx-auto mt-4 max-w-[740px] text-[36px] leading-[1.08] md:mx-0 md:mt-6 md:text-[clamp(48px,5.2vw,78px)]">
+          <p className="public-kicker mt-0 text-[12px] font-normal normal-case leading-[18px] tracking-normal md:mt-6 md:text-[11.5px] md:font-bold md:uppercase md:tracking-[2.07px]">Experiencias únicas en el Dique Cabra Corral</p>
+          <h1 className="editorial mx-auto mt-4 max-w-[740px] text-[36px] font-bold leading-[42px] tracking-normal md:mx-0 md:mt-6 md:text-[clamp(50px,5vw,70px)] md:leading-[1.0714]">
             Naturaleza y descanso frente al Dique Cabra Corral
           </h1>
-          <div className="relative mx-auto mt-6 h-[280px] w-full overflow-hidden rounded-[16px] md:hidden">
+          <div className="relative mx-auto mt-8 h-[280px] w-full overflow-hidden rounded-[16px] md:hidden">
             <Image
               src="/images/hero-figma.jpg"
               alt="Vista panorámica del Dique Cabra Corral"
