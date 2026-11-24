@@ -1,10 +1,92 @@
 'use client';
-import {useEffect,useState} from 'react';
-type Unit={unit_id:string;name:string;status:'PENDING'|'IN_PROGRESS'|'READY'};
-export function CleaningPanel(){
- const [units,setUnits]=useState<Unit[]>([]);const [busy,setBusy]=useState('');const [message,setMessage]=useState('');
- async function refresh(){const r=await fetch('/api/admin/housekeeping',{cache:'no-store'});const d=await r.json() as {units?:Unit[];error?:string};if(!r.ok)throw new Error(d.error??'Error');setUnits(d.units??[]);}
- useEffect(()=>{queueMicrotask(()=>{void refresh().catch(()=>setMessage('No pudimos cargar limpieza'));});},[]);
- async function change(id:string,status:Unit['status']){setBusy(id);setMessage('');try{const r=await fetch('/api/admin/housekeeping',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({unitId:id,status})});const data=await r.json() as {error?:string};if(!r.ok)throw new Error(data.error??'Error');await refresh();}catch(e){setMessage(e instanceof Error?e.message:'Error');}finally{setBusy('');}}
- return <><p className="mb-5 text-sm text-muted">Los estados de limpieza son independientes de las reservas y de la disponibilidad comercial.</p>{message&&<p role="alert" className="mb-4 text-red-700">{message}</p>}<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{units.map(u=><article key={u.unit_id} className="surface-card grid gap-4 p-6"><h2 className="editorial text-2xl">{u.name}</h2><strong>{u.status==='READY'?'Limpio y listo':u.status==='IN_PROGRESS'?'En limpieza':'Pendiente de limpieza'}</strong><div className="flex flex-wrap gap-2">{u.status==='PENDING'&&<button disabled={busy===u.unit_id} className="primary-button" onClick={()=>void change(u.unit_id,'IN_PROGRESS')}>Iniciar limpieza</button>}{u.status==='IN_PROGRESS'&&<button disabled={busy===u.unit_id} className="primary-button" onClick={()=>void change(u.unit_id,'READY')}>Marcar listo</button>}{u.status==='READY'&&<button disabled={busy===u.unit_id} className="secondary-button" onClick={()=>void change(u.unit_id,'PENDING')}>Marcar pendiente</button>}</div></article>)}</div></>;
+import { useEffect, useState } from 'react';
+type Unit = { unit_id: string; name: string; status: 'PENDING' | 'IN_PROGRESS' | 'READY' };
+export function CleaningPanel() {
+  const [units, setUnits] = useState<Unit[]>([]);
+  const [busy, setBusy] = useState('');
+  const [message, setMessage] = useState('');
+  async function refresh() {
+    const r = await fetch('/api/admin/housekeeping', { cache: 'no-store' });
+    const d = (await r.json()) as { units?: Unit[]; error?: string };
+    if (!r.ok) throw new Error(d.error ?? 'Error');
+    setUnits(d.units ?? []);
+  }
+  useEffect(() => {
+    queueMicrotask(() => {
+      void refresh().catch(() => setMessage('No pudimos cargar limpieza'));
+    });
+  }, []);
+  async function change(id: string, status: Unit['status']) {
+    setBusy(id);
+    setMessage('');
+    try {
+      const r = await fetch('/api/admin/housekeeping', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unitId: id, status }),
+      });
+      const data = (await r.json()) as { error?: string };
+      if (!r.ok) throw new Error(data.error ?? 'Error');
+      await refresh();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error');
+    } finally {
+      setBusy('');
+    }
+  }
+  return (
+    <>
+      <p className="mb-5 text-sm text-muted">
+        Los estados de limpieza son independientes de las reservas y de la disponibilidad comercial.
+      </p>
+      {message && (
+        <p role="alert" className="mb-4 text-red-700">
+          {message}
+        </p>
+      )}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {units.map((u) => (
+          <article key={u.unit_id} className="surface-card grid gap-4 p-6">
+            <h2 className="editorial text-2xl">{u.name}</h2>
+            <strong>
+              {u.status === 'READY'
+                ? 'Limpio y listo'
+                : u.status === 'IN_PROGRESS'
+                  ? 'En limpieza'
+                  : 'Pendiente de limpieza'}
+            </strong>
+            <div className="flex flex-wrap gap-2">
+              {u.status === 'PENDING' && (
+                <button
+                  disabled={busy === u.unit_id}
+                  className="primary-button"
+                  onClick={() => void change(u.unit_id, 'IN_PROGRESS')}
+                >
+                  Iniciar limpieza
+                </button>
+              )}
+              {u.status === 'IN_PROGRESS' && (
+                <button
+                  disabled={busy === u.unit_id}
+                  className="primary-button"
+                  onClick={() => void change(u.unit_id, 'READY')}
+                >
+                  Marcar listo
+                </button>
+              )}
+              {u.status === 'READY' && (
+                <button
+                  disabled={busy === u.unit_id}
+                  className="secondary-button"
+                  onClick={() => void change(u.unit_id, 'PENDING')}
+                >
+                  Marcar pendiente
+                </button>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
+  );
 }

@@ -18,12 +18,20 @@ export function getAuth() {
         enabled: true,
         requireEmailVerification: true,
         sendResetPassword: async ({ user, url }) => {
-          await sendMail({ to: user.email, subject: 'Recuperá el acceso a Bahía Corral', html: `<p>Para recuperar el acceso, usá el enlace de un solo uso:</p><p><a href="${url}">Restablecer contraseña</a></p>` });
+          await sendMail({
+            to: user.email,
+            subject: 'Recuperá el acceso a Bahía Corral',
+            html: `<p>Para recuperar el acceso, usá el enlace de un solo uso:</p><p><a href="${url}">Restablecer contraseña</a></p>`,
+          });
         },
       },
       emailVerification: {
         sendVerificationEmail: async ({ user, url }) => {
-          await sendMail({ to: user.email, subject: 'Verificá tu correo de Bahía Corral', html: `<p>Confirmá tu correo ingresando en el siguiente enlace:</p><p><a href="${url}">Verificar correo</a></p>` });
+          await sendMail({
+            to: user.email,
+            subject: 'Verificá tu correo de Bahía Corral',
+            html: `<p>Confirmá tu correo ingresando en el siguiente enlace:</p><p><a href="${url}">Verificar correo</a></p>`,
+          });
         },
       },
       session: { expiresIn: 30 * 24 * 60 * 60, updateAge: 0 },

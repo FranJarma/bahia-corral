@@ -14,7 +14,12 @@ async function main() {
       await client.unsafe(raw);
       console.info(`Migración verificada: ${filename}`);
     }
-  } finally { await client.end(); }
+  } finally {
+    await client.end();
+  }
 }
 
-void main().catch((error: unknown) => { console.error(error); process.exitCode = 1; });
+void main().catch((error: unknown) => {
+  console.error(error);
+  process.exitCode = 1;
+});

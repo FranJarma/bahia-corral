@@ -3,9 +3,15 @@ import { sql } from 'drizzle-orm';
 import type { TenantTx } from '@/infrastructure/db/tenant-transaction';
 
 export type AuditEvent = {
-  tenantId: string; actorId: string; actorType: 'USER'|'SYSTEM'|'PROVIDER';
-  entity: string; entityId: string; action: string; reason?: string;
-  changes?: Record<string,string>; correlationId: string;
+  tenantId: string;
+  actorId: string;
+  actorType: 'USER' | 'SYSTEM' | 'PROVIDER';
+  entity: string;
+  entityId: string;
+  action: string;
+  reason?: string;
+  changes?: Record<string, string>;
+  correlationId: string;
 };
 
 export async function appendAuditEvent(tx: TenantTx, input: AuditEvent): Promise<void> {

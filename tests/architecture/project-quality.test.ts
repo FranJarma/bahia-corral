@@ -1,9 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
+
 import { describe, expect, it } from 'vitest';
 
 describe('arquitectura y calidad del proyecto', () => {
   it('incluye scripts de validación, TypeScript estricto y las reglas para agentes', () => {
-    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as { scripts: Record<string, string> };
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      scripts: Record<string, string>;
+    };
     expect(pkg.scripts).toHaveProperty('lint');
     expect(pkg.scripts).toHaveProperty('format:check');
     expect(pkg.scripts).toHaveProperty('typecheck');
