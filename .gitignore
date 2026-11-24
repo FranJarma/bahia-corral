@@ -1,50 +1,13 @@
-# Dependencies
-node_modules/
-.pnpm-store/
-
-# Next.js / build outputs
-.next/
-out/
-build/
-dist/
-.turbo/
-.vercel/
-
-# Test and lint output
-coverage/
-playwright-report/
-test-results/
-*.tsbuildinfo
-.eslintcache
-
-# Local environment, credentials and secrets
 .env
 .env.*
 !.env.example
-!.env.template
-*.pem
-*.key
-*.p12
-*.pfx
-*.secret
-
-# Runtime logs and temporary files
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+.turbo/
+.superpowers/
+*.tsbuildinfo
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-tmp/
-temp/
-*.tmp
-
-# Operating systems / IDE
 .DS_Store
-Thumbs.db
-.idea/
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-
-# Local tool state
-.claude/settings.local.json
