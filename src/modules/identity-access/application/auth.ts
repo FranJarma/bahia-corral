@@ -1,6 +1,7 @@
 import 'server-only';
 
 import { betterAuth } from 'better-auth';
+import { username } from 'better-auth/plugins';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 
 import { getDatabase } from '@/infrastructure/db/client';
@@ -15,6 +16,7 @@ function createAuth() {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      revokeSessionsOnPasswordReset: true,
       sendResetPassword: async ({ user, url }) => {
         await sendMail({
           to: user.email,
@@ -32,6 +34,8 @@ function createAuth() {
         });
       },
     },
+    plugins: [username({ displayUsername: false })],
+    disabledPaths: ['/is-username-available'],
     session: { expiresIn: 30 * 24 * 60 * 60, updateAge: 0 },
     advanced: { disableCSRFCheck: false },
   });

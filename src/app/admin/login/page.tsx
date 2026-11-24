@@ -21,7 +21,7 @@ export default function AdminLoginPage() {
         </Link>
         <h1 className="editorial text-center text-[36px]">Acceso administrativo</h1>
         <p className="mb-7 mt-2 text-center text-sm text-muted">
-          Ingresá con tu cuenta del equipo de Bahía Corral.
+          Ingresá con tu nombre de usuario y contraseña del equipo.
         </p>
         <LoginForm />
         <p className="mt-7 text-center text-[11px] leading-6 text-muted">

@@ -22,7 +22,7 @@ for (const width of [390, 1440]) {
     }
 
     await page.locator('footer a[aria-label="Bahía Corral, volver al hero de inicio"]').click();
-    await expect(page).toHaveURL(/\/#hero$/);
+    await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('#hero')).toBeInViewport({ ratio: 0.1 });
   });
 
@@ -31,7 +31,7 @@ for (const width of [390, 1440]) {
     await page.goto('/alojamientos');
 
     await page.locator('footer a[aria-label="Bahía Corral, volver al hero de inicio"]').click();
-    await expect(page).toHaveURL(/\/#hero$/);
+    await expect(page).toHaveURL(/\/$/);
     await expect(page.locator('#hero')).toBeInViewport({ ratio: 0.1 });
   });
 }

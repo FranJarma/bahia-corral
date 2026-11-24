@@ -1,11 +1,12 @@
 'use client';
 
-import { createAuthClient } from 'better-auth/react';
+import Link from 'next/link';
 import { useState } from 'react';
 
-const client = createAuthClient();
+import { authClient } from '@/modules/identity-access/ui/auth-client';
+
 export function LoginForm() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,7 +18,7 @@ export function LoginForm() {
         setLoading(true);
         setError('');
         try {
-          const response = await client.signIn.email({ email, password });
+          const response = await authClient.signIn.username({ username: username.trim().toLowerCase(), password });
           if (response.error)
             setError('No fue posible iniciar sesión. Revisá tus datos o verificá tu correo.');
           else window.location.assign('/admin');
@@ -29,12 +30,14 @@ export function LoginForm() {
       }}
     >
       <label className="grid gap-2 text-sm font-semibold">
-        Correo electrónico
+        Nombre de usuario
         <input
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
       </label>
@@ -48,6 +51,11 @@ export function LoginForm() {
           required
         />
       </label>
+      <div className="flex justify-end">
+        <Link href="/admin/recuperar-contrasena" className="text-xs font-semibold text-ink underline underline-offset-4">
+          ¿Olvidaste tu contraseña?
+        </Link>
+      </div>
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
           {error}

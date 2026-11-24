@@ -1,13 +1,12 @@
 'use client';
 
-import { createAuthClient } from 'better-auth/react';
+import { authClient as auth } from '@/modules/identity-access/ui/auth-client';
 import { useState } from 'react';
-
-const auth = createAuthClient();
 
 export function InvitationForm({ token }: { token: string }) {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [mode, setMode] = useState<'register' | 'accept'>('register');
   const [loading, setLoading] = useState(false);
@@ -18,7 +17,7 @@ export function InvitationForm({ token }: { token: string }) {
     setMessage('');
     try {
       if (mode === 'register') {
-        const response = await auth.signUp.email({ name, email, password });
+        const response = await auth.signUp.email({ name, email, username: username.trim().toLowerCase(), password });
         if (response.error) throw new Error('No pudimos registrar la cuenta. Revisá los datos.');
         setMode('accept');
         setMessage(
@@ -58,6 +57,21 @@ export function InvitationForm({ token }: { token: string }) {
           <label className="grid gap-2 text-sm font-semibold">
             Nombre completo
             <input value={name} onChange={(event) => setName(event.target.value)} required />
+          </label>
+          <label className="grid gap-2 text-sm font-semibold">
+            Nombre de usuario
+            <input
+              type="text"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              minLength={3}
+              maxLength={30}
+              pattern="[A-Za-z0-9_.]+"
+              value={username}
+              onChange={(event) => setUsername(event.target.value)}
+              required
+            />
           </label>
           <label className="grid gap-2 text-sm font-semibold">
             Correo invitado
