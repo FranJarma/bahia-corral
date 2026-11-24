@@ -69,7 +69,7 @@ export function SiteHeader() {
           </Link>
         </nav>
         <nav
-          className="public-container flex h-[80px] items-center justify-between md:hidden"
+          className="public-container flex h-[79px] items-center justify-between md:hidden"
           aria-label="Navegación móvil"
         >
           <Link href="/" aria-label="Bahía Corral, ir a inicio" className="shrink-0">
