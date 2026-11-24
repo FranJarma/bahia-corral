@@ -1,26 +1,14 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 
-import { SiteHeader } from '@/modules/accommodations/ui/site-header';
 import { BookingForm } from '@/modules/reservations/ui/booking-form';
-export const metadata: Metadata = { title: 'Reservar alojamiento' };
-export default async function ReservationPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ alojamiento?: string }>;
-}) {
-  const { alojamiento } = await searchParams;
-  return (
-    <>
-      <SiteHeader />
-      <main className="public-container py-14">
-        <Link href="/alojamientos" className="text-sm text-brand underline">
-          Volver a alojamientos
-        </Link>
-        <div className="mx-auto mt-8 max-w-2xl">
-          <BookingForm defaultSlug={alojamiento} />
-        </div>
-      </main>
-    </>
-  );
+import { PublicPage } from '@/modules/shared-ui/public-page';
+
+export const metadata: Metadata = { title: 'Completá tu reserva' };
+export default async function ReservationPage({searchParams}:{searchParams:Promise<{alojamiento?:string;checkin?:string;checkout?:string;adults?:string;minors?:string}>}){
+  const params=await searchParams;
+  const adults=Math.max(1,Math.min(8,Number(params.adults)||2));
+  const minors=Math.max(0,Math.min(8-adults,Number(params.minors)||0));
+  const checkin=/^\d{4}-\d{2}-\d{2}$/.test(params.checkin??'')?params.checkin:'';
+  const checkout=/^\d{4}-\d{2}-\d{2}$/.test(params.checkout??'')?params.checkout:'';
+  return <PublicPage><section className="public-container py-8 md:py-14"><BookingForm defaultSlug={params.alojamiento} defaultCheckin={checkin} defaultCheckout={checkout} defaultAdults={adults} defaultMinors={minors}/></section></PublicPage>;
 }

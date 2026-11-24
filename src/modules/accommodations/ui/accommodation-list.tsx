@@ -1,0 +1,71 @@
+'use client';
+
+import { ArrowRight, Search, SlidersHorizontal, Users } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+
+import { PUBLIC_UNITS } from '@/modules/accommodations/domain/seed-units';
+
+type UnitType = 'ALL' | 'CABIN' | 'STUDIO' | 'ROOM';
+
+const choices: { value: UnitType; label: string }[] = [
+  { value: 'ALL', label: 'Todos los alojamientos' },
+  { value: 'CABIN', label: 'Cabañas familiares' },
+  { value: 'STUDIO', label: 'Monoambientes' },
+  { value: 'ROOM', label: 'Habitación' },
+];
+
+export function AccommodationList() {
+  const [type, setType] = useState<UnitType>('ALL');
+  const [capacity, setCapacity] = useState(0);
+  const [sort, setSort] = useState('all');
+  const [search, setSearch] = useState('');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const units = useMemo(() => {
+    const found = PUBLIC_UNITS.filter((unit) =>
+      (type === 'ALL' || type === unit.type) &&
+      unit.capacityTotal >= capacity &&
+      unit.name.toLocaleLowerCase('es').includes(search.trim().toLocaleLowerCase('es')),
+    );
+    if (sort === 'capacity') return [...found].sort((a, b) => b.capacityTotal - a.capacityTotal);
+    return found;
+  }, [type, capacity, search, sort]);
+
+  return (
+    <div className="grid gap-7 lg:grid-cols-[220px_minmax(0,1fr)]">
+      <button type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)} className="secondary-button flex w-full items-center justify-between lg:hidden"><span>Filtrar alojamientos</span><SlidersHorizontal size={17}/></button>
+      <aside className={`${filtersOpen ? 'block' : 'hidden'} h-fit rounded-xl bg-[#fcfaf6] p-5 lg:block`} aria-label="Filtros de alojamientos">
+        <h2 className="mb-5 text-[11px] font-bold uppercase tracking-[.16em]">Filtrar por</h2>
+        <fieldset className="border-t border-[#e8e0d6] pt-5">
+          <legend className="text-[11px] font-semibold uppercase tracking-widest">Tipo</legend>
+          <div className="mt-3 grid gap-3 text-xs text-muted">
+            {choices.map((choice) => <label key={choice.value} className="flex cursor-pointer items-center gap-2"><input type="radio" checked={type === choice.value} onChange={() => setType(choice.value)} name="unitType" className="!h-4 !min-h-0 !w-4 accent-[#173747]"/>{choice.label}</label>)}
+          </div>
+        </fieldset>
+        <fieldset className="mt-6 border-t border-[#e8e0d6] pt-5">
+          <legend className="text-[11px] font-semibold uppercase tracking-widest">Capacidad</legend>
+          <div className="mt-3 grid gap-3 text-xs text-muted">
+            {[0, 2, 4, 6, 8].map((value) => <label key={value} className="flex cursor-pointer items-center gap-2"><input type="radio" checked={capacity===value} onChange={() => setCapacity(value)} name="capacity" className="!h-4 !min-h-0 !w-4 accent-[#173747]"/>{value===0 ? 'Todas' : `Al menos ${value} personas`}</label>)}
+          </div>
+        </fieldset>
+        <button type="button" onClick={() => {setType('ALL');setCapacity(0);setSearch('');setSort('all');}} className="mt-7 text-xs font-semibold text-ink underline underline-offset-4">Limpiar filtros</button>
+      </aside>
+
+      <div className="min-w-0">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><p className="text-xs text-muted">{units.length} alojamientos encontrados</p><div className="flex flex-wrap items-center gap-2">
+          <div className="relative"><Search aria-hidden="true" size={15} className="absolute top-1/2 left-3 -translate-y-1/2 text-muted"/><input type="search" aria-label="Buscar alojamiento" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar alojamiento" className="!h-11 w-[180px] pl-9 text-xs sm:w-[240px]"/></div>
+          <select aria-label="Ordenar resultados" value={sort} onChange={e=>setSort(e.target.value)} className="!h-11 min-w-[140px] text-xs"><option value="all">Orden original</option><option value="capacity">Mayor capacidad</option></select>
+        </div></div>
+        <div className="grid gap-3">
+          {units.map((unit) => <article key={unit.code} className="grid overflow-hidden rounded-[14px] bg-cream-soft sm:grid-cols-[220px_minmax(0,1fr)_145px]">
+            <Link href={`/alojamientos/${unit.slug}`} className="relative block aspect-[1.7] overflow-hidden sm:aspect-auto sm:min-h-[150px]" aria-label={`Ver ${unit.name}`}><Image src={`/images/${unit.slug}.jpg`} alt={unit.name} fill sizes="(max-width: 640px) 100vw, 220px" className="object-cover"/></Link>
+            <div className="min-w-0 px-5 py-4"><p className="public-kicker !text-[9px]">{unit.label}</p><h2 className="editorial mt-1 text-[23px]">{unit.name}</h2><p className="mt-2 text-[11px] leading-5 text-muted">{unit.description}</p><p className="mt-4 flex items-center gap-1.5 text-[11px] text-muted"><Users size={14}/> Hasta {unit.capacityTotal} huéspedes · Servicios del complejo</p></div>
+            <div className="flex flex-col items-center justify-center gap-3 border-t border-[#eae0d4] px-4 py-4 sm:border-t-0 sm:border-l"><span className="text-xs text-muted">Desde</span><span className="editorial text-[22px]">{unit.fromPrice}</span><span className="text-[10px] text-muted">por noche</span><Link href={`/alojamientos/${unit.slug}`} className="primary-button !min-h-[36px] !px-5 !text-[10px]">Ver detalle <ArrowRight size={13}/></Link></div>
+          </article>)}
+          {units.length===0 && <div className="rounded-xl bg-cream-soft p-10 text-center"><p className="editorial text-2xl">No encontramos alojamientos con esos filtros</p><p className="mt-3 text-xs text-muted">Probá con otra capacidad o tipo de alojamiento.</p><button type="button" className="secondary-button mt-5" onClick={() => {setType('ALL');setCapacity(0);setSearch('');}}>Ver todos</button></div>}
+        </div>
+      </div>
+    </div>
+  );
+}
