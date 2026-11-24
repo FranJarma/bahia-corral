@@ -60,7 +60,7 @@ export default function HomePage() {
               className="h-auto w-[139px]"
             />
           </div>
-          <p className="public-kicker mt-0 text-[12px] font-normal normal-case leading-[18px] tracking-normal md:mt-6 md:text-[11.5px] md:font-bold md:uppercase md:tracking-[2.07px]">
+          <p className="public-kicker hero-mobile-kicker mt-0 md:mt-6">
             Experiencias únicas en el Dique Cabra Corral
           </p>
           <h1 className="editorial mx-auto mt-4 max-w-[740px] text-[36px] font-bold leading-[42px] tracking-normal md:mx-0 md:mt-6 md:text-[clamp(50px,5vw,70px)] md:leading-[1.0714]">
