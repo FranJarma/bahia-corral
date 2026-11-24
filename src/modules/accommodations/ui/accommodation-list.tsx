@@ -48,12 +48,19 @@ export function AccommodationList() {
         className={`${filtersOpen ? 'block' : 'hidden'} h-fit w-full min-w-0 rounded-[16px] border border-[#e6ddce] bg-[#fcf9f3] p-5 lg:!block`}
         aria-label="Filtros de alojamientos"
       >
-        <h2 className="mb-4 text-[11.5px] font-medium uppercase tracking-[.18em] text-[#8b9498]">Filtrar por</h2>
+        <h2 className="mb-4 text-[11.5px] font-medium uppercase tracking-[.18em] text-[#8b9498]">
+          Filtrar por
+        </h2>
         <fieldset className="min-w-0 border-t border-[#e6ddce] pt-4">
-          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">Tipo</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">
+            Tipo
+          </legend>
           <div className="mt-2 grid gap-1 text-[12.5px] leading-5 text-muted">
             {choices.map((choice) => (
-              <label key={choice.value} className="flex min-h-8 cursor-pointer items-center gap-2.5 py-1">
+              <label
+                key={choice.value}
+                className="flex min-h-8 cursor-pointer items-center gap-2.5 py-1"
+              >
                 <input
                   type="radio"
                   checked={type === choice.value}
@@ -67,7 +74,9 @@ export function AccommodationList() {
           </div>
         </fieldset>
         <fieldset className="mt-5 min-w-0 border-t border-[#e6ddce] pt-4">
-          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">Capacidad</legend>
+          <legend className="text-[11px] font-semibold uppercase tracking-[.1em] text-ink">
+            Capacidad
+          </legend>
           <div className="mt-2 grid gap-1 text-[12.5px] leading-5 text-muted">
             {[0, 2, 4, 6, 8].map((value) => (
               <label key={value} className="flex min-h-8 cursor-pointer items-center gap-2.5 py-1">

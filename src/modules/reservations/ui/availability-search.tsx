@@ -63,7 +63,9 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[10px] font-semibold text-muted">Llegada</span>
-            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">{formatDate(checkin)}</span>
+            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">
+              {formatDate(checkin)}
+            </span>
           </span>
           <input
             type="date"
@@ -82,14 +84,19 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           />
           <ChevronDown size={13} aria-hidden="true" />
         </label>
-        <span aria-hidden="true" className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block" />
+        <span
+          aria-hidden="true"
+          className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block"
+        />
         <label
           className={`relative flex min-w-0 items-center gap-2 rounded-lg px-3 ${compact ? 'h-[46px]' : 'h-12 lg:h-[46px] lg:w-[170px] lg:shrink-0'}`}
         >
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="text-[10px] font-semibold text-muted">Salida</span>
-            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">{formatDate(checkout)}</span>
+            <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">
+              {formatDate(checkout)}
+            </span>
           </span>
           <input
             type="date"
@@ -101,7 +108,10 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           />
           <ChevronDown size={13} aria-hidden="true" />
         </label>
-        <span aria-hidden="true" className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block" />
+        <span
+          aria-hidden="true"
+          className="my-auto hidden h-[26px] w-px shrink-0 bg-[#ddcdb8] lg:block"
+        />
         <div
           className={`relative flex min-w-0 items-center ${compact ? 'h-[46px]' : 'h-12 lg:h-[46px] lg:w-[300px] lg:shrink-0'}`}
         >
