@@ -18,10 +18,7 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
           key={unit.code}
           className={`surface-card flex flex-col overflow-hidden ${mobileCarousel ? 'w-[min(calc(100vw-48px),365px)] shrink-0 snap-center md:w-auto' : ''}`}
         >
-          <Link
-            href={`/alojamientos/${unit.slug}`}
-            className="block"
-          >
+          <Link href={`/alojamientos/${unit.slug}`} className="block">
             <div className="relative aspect-[1.33] overflow-hidden bg-sand">
               <Image
                 src={`/images/${unit.slug}.jpg`}
