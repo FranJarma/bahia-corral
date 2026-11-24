@@ -2,7 +2,7 @@
 
 **Plataforma web de reservas y operación para un complejo turístico en el Dique Cabra Corral, Salta (Argentina).**
 
-> **Estado actual:** proyecto en preparación. El repositorio se inicializa con documentación; el MVP todavía no está implementado ni desplegado. No confundir las funcionalidades planificadas con funcionalidades disponibles.
+> **Estado actual:** MVP en implementación en `feat/mvp-36-tasks`. Existe una Preview en Vercel y una base de datos Neon separada. No todas las integraciones externas están configuradas ni el MVP se considera listo para producción.
 
 ## Objetivo
 
@@ -33,7 +33,7 @@ La administración funciona con roles **PLATFORM_ADMIN** (global), **OWNER**, **
 | Interfaz | Tailwind CSS 4; Shadcn/Radix sólo como primitivas necesarias |
 | Arquitectura | Monolito modular, Screaming Architecture por dominio/feature |
 | Datos | PostgreSQL en Neon + Drizzle ORM, restricciones transaccionales y RLS por tenant |
-| Autenticación | Better Auth; email/contraseña para equipo y OTP por email para huéspedes; **sin MFA en el MVP** |
+| Autenticación | Better Auth; **nombre de usuario y contraseña para el equipo**, correo verificado para recuperación, OTP por email para huéspedes; **sin MFA en el MVP** |
 | Pagos | Mercado Pago Checkout Pro / Orders API + registro manual de pagos |
 | Jobs y notificaciones | Trigger.dev (adaptador propio + outbox) y Resend (plantillas propias) |
 | Archivos | Cloudflare R2, con separación entre fotografías públicas y comprobantes privados |
@@ -82,6 +82,26 @@ Cada módulo tendrá sólo las carpetas que necesite (`domain`, `application`, `
 - **Integraciones reemplazables:** no acoplar dominio a Mercado Pago, Trigger.dev, Resend o Cloudflare R2.
 - **Código legible:** responsabilidades claras, imports ordenados, sin código muerto y sin abstracciones ceremoniales.
 
+## Acceso administrativo y recuperación
+
+- **Dashboard:** `/admin` (requiere cuenta administrativa y sesión válida).
+- **Iniciar sesión:** `/admin/login`, utilizando **nombre de usuario + contraseña**; no se inicia sesión con correo desde el formulario.
+- **Recuperación:** `/admin/recuperar-contrasena`, mediante enlace de un solo uso enviado al **correo asociado a la cuenta**. El enlace lleva a `/admin/restablecer-contrasena`.
+- **Altas:** cada cuenta necesita un nombre de usuario único y un correo real verificado; los roles se asignan mediante el mecanismo de acceso autorizado. No deben insertarse contraseñas en commits o seeds públicos.
+- **Entorno Preview:** sólo usa Neon Preview; el envío de recuperación no será operativo hasta configurar `RESEND_API_KEY`, `RESEND_FROM_EMAIL` y un dominio emisor verificado.
+- **Dominio administrativo deseado:** `admin.bahiacorral.com`, pendiente de confirmar propiedad del dominio, configuración de DNS y alias en Vercel. En el MVP puede utilizarse la misma aplicación Next.js y el segmento interno `/admin`; el subdominio no implica un backend separado.
+
+## Desarrollo local
+
+Después de clonar el repositorio, creá el archivo local `.env` a partir de `.env.example` y cargá credenciales de **desarrollo**. Nunca uses credenciales ni datos de producción para pruebas.
+
+```bash
+npm install
+npm run dev
+```
+
+Controles disponibles: `npm run lint`, `npm run format:check`, `npm run typecheck`, `npm run test:unit`, `npm run test:integration`, `npm run test:e2e` y `npm run build`. Las pruebas de integración necesitan un motor PostgreSQL de test mediante Testcontainers y las pruebas E2E pueden usar `PLAYWRIGHT_BASE_URL`. Las migraciones requieren `DATABASE_MIGRATION_URL` del entorno correspondiente y deben ejecutarse de manera controlada, separadas del build.
+
 ## Plan de trabajo — 36 tareas
 
 | Fase | Tareas | Resultado esperado |
@@ -102,7 +122,7 @@ Cada módulo tendrá sólo las carpetas que necesite (`domain`, `application`, `
 
 ## Desarrollo y colaboración
 
-**Todavía no hay una aplicación ejecutable en este repositorio.** El primer hito de implementación incorporará la estructura y los scripts correspondientes. Una vez preparado el proyecto, la documentación incluirá comandos reproducibles de instalación, ejecución, test y build.
+La aplicación Next.js y sus scripts de desarrollo ya existen. El alcance de cada integración debe verificarse mediante pruebas y configuración del entorno antes de considerar operativa la funcionalidad.
 
 Flujo previsto: rama por tarea → Pull Request → validaciones de formato, lint, tipos, tests y build → revisión → merge. Los despliegues de producción requieren aprobación manual. **Nunca publicar credenciales, tokens o datos reales de huéspedes en commits, ejemplos o logs.**
 
@@ -116,4 +136,4 @@ Leé [AGENTS.md](./AGENTS.md) antes de colaborar mediante agentes de IA.
 
 ---
 
-**Idioma del producto y documentación:** español. **Zona horaria operativa:** `America/Argentina/Salta`. **Estado:** documentación inicial; ninguna funcionalidad se presume terminada.
+**Idioma del producto y documentación:** español. **Zona horaria operativa:** `America/Argentina/Salta`. **Estado:** implementación activa; no confundir Preview navegable con producción lista para cobrar.
