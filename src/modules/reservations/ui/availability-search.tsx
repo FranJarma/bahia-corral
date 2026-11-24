@@ -103,7 +103,6 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
           <button
             type="button"
             onClick={() => setGuestOpen(!guestOpen)}
-            aria-label="Elegir huéspedes"
             aria-expanded={guestOpen}
             className="flex h-full w-full items-center gap-2 rounded-lg px-3 text-left"
           >
