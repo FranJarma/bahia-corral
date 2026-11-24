@@ -36,7 +36,7 @@ const experiences = [
 export default function HomePage() {
   return (
     <PublicPage>
-      <section className="relative isolate bg-cream md:min-h-[826px]">
+      <section id="hero" className="relative isolate bg-cream md:min-h-[826px]">
         <div className="absolute inset-x-0 top-0 hidden h-[702px] md:block">
           <Image
             src="/images/hero-figma.jpg"
@@ -80,13 +80,14 @@ export default function HomePage() {
             Frente al dique, rodeadas de naturaleza. Descansá, disfrutá y viví momentos inolvidables
             en uno de los paisajes más increíbles de Salta.
           </p>
-          <div className="mx-auto mt-8 text-left md:mx-0 md:mt-7">
+          <div id="reservar" className="mx-auto mt-8 scroll-mt-6 text-left md:mx-0 md:mt-7">
             <AvailabilitySearch />
           </div>
         </div>
       </section>
 
-      <section className="public-container pt-8 md:pt-20 md:pb-24" id="alojamientos">
+      <section className="public-container scroll-mt-6 pt-8 md:pt-20 md:pb-24" id="nuestros-alojamientos">
+        <span id="alojamientos" aria-hidden="true" className="block h-0 scroll-mt-6" />
         <h2 className="editorial text-[32px] leading-[40px] md:hidden">Nuestros alojamientos</h2>
         <div className="mb-8 hidden flex-wrap items-end justify-between gap-5 md:mb-10 md:flex">
           <div>
@@ -114,7 +115,8 @@ export default function HomePage() {
         </Link>
       </section>
 
-      <div className="public-container md:hidden">
+      <div id="experiencias" className="scroll-mt-6">
+        <div className="public-container md:hidden">
         <section className="mt-8" aria-labelledby="mobile-experience-title">
           <h2
             id="mobile-experience-title"
@@ -139,57 +141,8 @@ export default function HomePage() {
             Explorar experiencias <ArrowRight size={15} />
           </Link>
         </section>
-        <section className="mt-8" aria-labelledby="mobile-events-title">
-          <h2 id="mobile-events-title" className="editorial text-center text-[34px] leading-[40px]">
-            Celebraciones frente al agua
-          </h2>
-          <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
-            <Image
-              src="/images/eventos-figma.jpg"
-              alt="Celebraciones privadas frente al agua"
-              fill
-              sizes="342px"
-              className="object-cover"
-            />
-          </div>
-          <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
-            Celebrá junto al dique. Conocé nuestros espacios y consultanos por tu evento.
-          </p>
-          <Link href="/eventos" className="secondary-button mt-8 w-full">
-            Ver eventos <ArrowRight size={15} />
-          </Link>
-        </section>
-        <section className="mt-8" aria-labelledby="mobile-location-title">
-          <div className="rounded-2xl bg-sand p-5">
-            <h2 id="mobile-location-title" className="editorial text-center text-[29px]">
-              Dique Cabra Corral, Salta
-            </h2>
-            <p className="mt-3 text-center text-[12px] leading-[21px] text-muted">
-              Bahía Corral se encuentra a orillas del dique, rodeado de sierras y naturaleza.
-            </p>
-            <div className="mt-5 overflow-hidden rounded-xl">
-              <iframe
-                title="Ubicación de Bahía Corral en Google Maps"
-                src="https://www.google.com/maps?q=Bahia%20Corral%20Dique%20Cabra%20Corral%20Salta&output=embed"
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                allowFullScreen
-                className="h-[250px] w-full border-0"
-              />
-            </div>
-            <a
-              className="secondary-button mt-5 w-full"
-              href="https://www.google.com/maps/search/?api=1&query=Bahia+Corral+Dique+Cabra+Corral"
-              target="_blank"
-              rel="noreferrer"
-            >
-              Cómo llegar <ArrowRight size={15} />
-            </a>
-          </div>
-        </section>
-      </div>
-
-      <section className="hidden bg-sand py-16 md:block md:py-24" id="experiencias">
+        </div>
+      <section className="hidden bg-sand py-16 md:block md:py-24">
         <div className="public-container">
           <p className="public-kicker">Experiencias en Cabra Corral</p>
           <h2 className="editorial section-heading mt-3">Naturaleza, agua y descanso</h2>
@@ -224,8 +177,32 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
+      </div>
 
-      <section className="public-container hidden py-16 md:block md:py-24" id="eventos">
+      <div id="eventos" className="scroll-mt-6">
+        <div className="public-container md:hidden">
+        <section className="mt-8" aria-labelledby="mobile-events-title">
+          <h2 id="mobile-events-title" className="editorial text-center text-[34px] leading-[40px]">
+            Celebraciones frente al agua
+          </h2>
+          <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
+            <Image
+              src="/images/eventos-figma.jpg"
+              alt="Celebraciones privadas frente al agua"
+              fill
+              sizes="342px"
+              className="object-cover"
+            />
+          </div>
+          <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
+            Celebrá junto al dique. Conocé nuestros espacios y consultanos por tu evento.
+          </p>
+          <Link href="/eventos" className="secondary-button mt-8 w-full">
+            Ver eventos <ArrowRight size={15} />
+          </Link>
+        </section>
+        </div>
+      <section className="public-container hidden py-16 md:block md:py-24">
         <div className="mx-auto max-w-[1040px] md:block">
           <div className="hidden md:block">
             <EventInquiryForm />
@@ -250,8 +227,40 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </div>
 
-      <section className="hidden bg-sand py-16 md:block md:py-20" id="ubicacion">
+      <div id="ubicacion" className="scroll-mt-6">
+        <div className="public-container md:hidden">
+        <section className="mt-8" aria-labelledby="mobile-location-title">
+          <div className="rounded-2xl bg-sand p-5">
+            <h2 id="mobile-location-title" className="editorial text-center text-[29px]">
+              Dique Cabra Corral, Salta
+            </h2>
+            <p className="mt-3 text-center text-[12px] leading-[21px] text-muted">
+              Bahía Corral se encuentra a orillas del dique, rodeado de sierras y naturaleza.
+            </p>
+            <div className="mt-5 overflow-hidden rounded-xl">
+              <iframe
+                title="Ubicación de Bahía Corral en Google Maps"
+                src="https://www.google.com/maps?q=Bahia%20Corral%20Dique%20Cabra%20Corral%20Salta&output=embed"
+                loading="lazy"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+                className="h-[250px] w-full border-0"
+              />
+            </div>
+            <a
+              className="secondary-button mt-5 w-full"
+              href="https://www.google.com/maps/search/?api=1&query=Bahia+Corral+Dique+Cabra+Corral"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Cómo llegar <ArrowRight size={15} />
+            </a>
+          </div>
+        </section>
+        </div>
+      <section className="hidden bg-sand py-16 md:block md:py-20">
         <div className="public-container grid items-center gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
           <div>
             <p className="public-kicker">Ubicación</p>
@@ -300,6 +309,7 @@ export default function HomePage() {
           </a>
         </div>
       </section>
+      </div>
 
       <section className="public-container hidden py-24 md:block">
         <div className="relative isolate flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-2xl px-6 text-center text-white">

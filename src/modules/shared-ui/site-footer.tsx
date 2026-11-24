@@ -19,7 +19,7 @@ export function SiteFooter() {
     <footer className="bg-[#fcfaf6] text-ink">
       <div className="public-container grid gap-10 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-12 md:py-20">
         <div>
-          <Link href="/" className="inline-block" aria-label="Bahía Corral, ir a inicio">
+          <Link href="/#hero" className="inline-block" aria-label="Bahía Corral, volver al hero de inicio">
             <Image
               src="/images/logo-bahia-corral.png"
               width={129}
@@ -68,7 +68,7 @@ export function SiteFooter() {
       <div className="border-t border-[#e9e0d4]">
         <div className="public-container flex flex-wrap items-center justify-between gap-4 py-5 text-[11px] text-muted">
           <span>© 2026 Bahía Corral · Club Náutico, Cabañas &amp; Spa</span>
-          <Link href="/" className="hover:text-ink">
+          <Link href="/#hero" className="hover:text-ink">
             Volver al inicio ↑
           </Link>
         </div>
