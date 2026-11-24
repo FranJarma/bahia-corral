@@ -26,9 +26,7 @@ for (const width of [390, 1440]) {
     await expect(page.locator('#hero')).toBeInViewport({ ratio: 0.1 });
   });
 
-  test(`el logo del footer regresa desde una ficha al hero a ${width}px`, async ({
-    page,
-  }) => {
+  test(`el logo del footer regresa desde una ficha al hero a ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/alojamientos');
 

@@ -86,7 +86,10 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="public-container scroll-mt-6 pt-8 md:pt-20 md:pb-24" id="nuestros-alojamientos">
+      <section
+        className="public-container scroll-mt-6 pt-8 md:pt-20 md:pb-24"
+        id="nuestros-alojamientos"
+      >
         <span id="alojamientos" aria-hidden="true" className="block h-0 scroll-mt-6" />
         <h2 className="editorial text-[32px] leading-[40px] md:hidden">Nuestros alojamientos</h2>
         <div className="mb-8 hidden flex-wrap items-end justify-between gap-5 md:mb-10 md:flex">
@@ -117,140 +120,195 @@ export default function HomePage() {
 
       <div id="experiencias" className="scroll-mt-6">
         <div className="public-container md:hidden">
-        <section className="mt-8" aria-labelledby="mobile-experience-title">
-          <h2
-            id="mobile-experience-title"
-            className="editorial text-center text-[34px] leading-[40px]"
-          >
-            Naturaleza, agua y descanso
-          </h2>
-          <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
-            <Image
-              src="/images/aire-libre.jpg"
-              alt="Espacios naturales a orillas del Dique Cabra Corral"
-              fill
-              sizes="342px"
-              className="object-cover"
-            />
+          <section className="mt-8" aria-labelledby="mobile-experience-title">
+            <h2
+              id="mobile-experience-title"
+              className="editorial text-center text-[34px] leading-[40px]"
+            >
+              Naturaleza, agua y descanso
+            </h2>
+            <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
+              <Image
+                src="/images/aire-libre.jpg"
+                alt="Espacios naturales a orillas del Dique Cabra Corral"
+                fill
+                sizes="342px"
+                className="object-cover"
+              />
+            </div>
+            <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
+              Un entorno pensado para reconectar. Cada estadía combina el paisaje del dique con
+              actividades y momentos de calma.
+            </p>
+            <Link href="/experiencias" className="secondary-button mt-8 w-full">
+              Explorar experiencias <ArrowRight size={15} />
+            </Link>
+          </section>
+        </div>
+        <section className="hidden bg-sand py-16 md:block md:py-24">
+          <div className="public-container">
+            <p className="public-kicker">Experiencias en Cabra Corral</p>
+            <h2 className="editorial section-heading mt-3">Naturaleza, agua y descanso</h2>
+            <p className="mt-3 max-w-[700px] text-xs leading-6 text-muted">
+              Un entorno pensado para reconectar. Cada estadía combina el paisaje del dique con
+              actividades y momentos de calma.
+            </p>
+            <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+              {experiences.map((experience, index) => (
+                <article
+                  key={experience.title}
+                  className={`${index !== 1 ? 'hidden sm:block' : ''} overflow-hidden rounded-[16px] bg-cream-soft text-center`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={experience.image}
+                      alt={experience.title}
+                      fill
+                      sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,300px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="px-5 py-7">
+                    <h3 className="editorial text-[24px]">{experience.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-muted">{experience.description}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <Link href="/experiencias" className="secondary-button mt-7 w-full sm:hidden">
+              Explorar experiencias <ArrowRight size={15} />
+            </Link>
           </div>
-          <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
-            Un entorno pensado para reconectar. Cada estadía combina el paisaje del dique con
-            actividades y momentos de calma.
-          </p>
-          <Link href="/experiencias" className="secondary-button mt-8 w-full">
-            Explorar experiencias <ArrowRight size={15} />
-          </Link>
         </section>
-        </div>
-      <section className="hidden bg-sand py-16 md:block md:py-24">
-        <div className="public-container">
-          <p className="public-kicker">Experiencias en Cabra Corral</p>
-          <h2 className="editorial section-heading mt-3">Naturaleza, agua y descanso</h2>
-          <p className="mt-3 max-w-[700px] text-xs leading-6 text-muted">
-            Un entorno pensado para reconectar. Cada estadía combina el paisaje del dique con
-            actividades y momentos de calma.
-          </p>
-          <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {experiences.map((experience, index) => (
-              <article
-                key={experience.title}
-                className={`${index !== 1 ? 'hidden sm:block' : ''} overflow-hidden rounded-[16px] bg-cream-soft text-center`}
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={experience.image}
-                    alt={experience.title}
-                    fill
-                    sizes="(max-width:640px) 100vw,(max-width:1024px) 50vw,300px"
-                    className="object-cover"
-                  />
-                </div>
-                <div className="px-5 py-7">
-                  <h3 className="editorial text-[24px]">{experience.title}</h3>
-                  <p className="mt-2 text-xs leading-6 text-muted">{experience.description}</p>
-                </div>
-              </article>
-            ))}
-          </div>
-          <Link href="/experiencias" className="secondary-button mt-7 w-full sm:hidden">
-            Explorar experiencias <ArrowRight size={15} />
-          </Link>
-        </div>
-      </section>
       </div>
 
       <div id="eventos" className="scroll-mt-6">
         <div className="public-container md:hidden">
-        <section className="mt-8" aria-labelledby="mobile-events-title">
-          <h2 id="mobile-events-title" className="editorial text-center text-[34px] leading-[40px]">
-            Celebraciones frente al agua
-          </h2>
-          <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
-            <Image
-              src="/images/eventos-figma.jpg"
-              alt="Celebraciones privadas frente al agua"
-              fill
-              sizes="342px"
-              className="object-cover"
-            />
-          </div>
-          <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
-            Celebrá junto al dique. Conocé nuestros espacios y consultanos por tu evento.
-          </p>
-          <Link href="/eventos" className="secondary-button mt-8 w-full">
-            Ver eventos <ArrowRight size={15} />
-          </Link>
-        </section>
-        </div>
-      <section className="public-container hidden py-16 md:block md:py-24">
-        <div className="mx-auto max-w-[1040px] md:block">
-          <div className="hidden md:block">
-            <EventInquiryForm />
-          </div>
-          <div className="md:hidden">
-            <h2 className="editorial section-heading text-center">Celebraciones frente al agua</h2>
-            <div className="relative mt-6 aspect-[4/3] overflow-hidden rounded-2xl">
+          <section className="mt-8" aria-labelledby="mobile-events-title">
+            <h2
+              id="mobile-events-title"
+              className="editorial text-center text-[34px] leading-[40px]"
+            >
+              Celebraciones frente al agua
+            </h2>
+            <div className="relative mt-8 h-[240px] overflow-hidden rounded-2xl">
               <Image
                 src="/images/eventos-figma.jpg"
-                alt="Celebración privada frente al dique"
+                alt="Celebraciones privadas frente al agua"
                 fill
-                sizes="100vw"
+                sizes="342px"
                 className="object-cover"
               />
             </div>
-            <p className="mt-5 text-center text-xs leading-6 text-muted">
-              Eventos privados y corporativos, con posibilidad de alojamiento para tus invitados.
+            <p className="mt-8 text-center text-[13px] leading-[22px] text-muted">
+              Celebrá junto al dique. Conocé nuestros espacios y consultanos por tu evento.
             </p>
-            <Link href="/eventos" className="secondary-button mt-6 w-full">
-              Explorar experiencias <ArrowRight size={15} />
+            <Link href="/eventos" className="secondary-button mt-8 w-full">
+              Ver eventos <ArrowRight size={15} />
             </Link>
-          </div>
+          </section>
         </div>
-      </section>
+        <section className="public-container hidden py-16 md:block md:py-24">
+          <div className="mx-auto max-w-[1040px] md:block">
+            <div className="hidden md:block">
+              <EventInquiryForm />
+            </div>
+            <div className="md:hidden">
+              <h2 className="editorial section-heading text-center">
+                Celebraciones frente al agua
+              </h2>
+              <div className="relative mt-6 aspect-[4/3] overflow-hidden rounded-2xl">
+                <Image
+                  src="/images/eventos-figma.jpg"
+                  alt="Celebración privada frente al dique"
+                  fill
+                  sizes="100vw"
+                  className="object-cover"
+                />
+              </div>
+              <p className="mt-5 text-center text-xs leading-6 text-muted">
+                Eventos privados y corporativos, con posibilidad de alojamiento para tus invitados.
+              </p>
+              <Link href="/eventos" className="secondary-button mt-6 w-full">
+                Explorar experiencias <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
 
       <div id="ubicacion" className="scroll-mt-6">
         <div className="public-container md:hidden">
-        <section className="mt-8" aria-labelledby="mobile-location-title">
-          <div className="rounded-2xl bg-sand p-5">
-            <h2 id="mobile-location-title" className="editorial text-center text-[29px]">
-              Dique Cabra Corral, Salta
-            </h2>
-            <p className="mt-3 text-center text-[12px] leading-[21px] text-muted">
-              Bahía Corral se encuentra a orillas del dique, rodeado de sierras y naturaleza.
-            </p>
-            <div className="mt-5 overflow-hidden rounded-xl">
+          <section className="mt-8" aria-labelledby="mobile-location-title">
+            <div className="rounded-2xl bg-sand p-5">
+              <h2 id="mobile-location-title" className="editorial text-center text-[29px]">
+                Dique Cabra Corral, Salta
+              </h2>
+              <p className="mt-3 text-center text-[12px] leading-[21px] text-muted">
+                Bahía Corral se encuentra a orillas del dique, rodeado de sierras y naturaleza.
+              </p>
+              <div className="mt-5 overflow-hidden rounded-xl">
+                <iframe
+                  title="Ubicación de Bahía Corral en Google Maps"
+                  src="https://www.google.com/maps?q=Bahia%20Corral%20Dique%20Cabra%20Corral%20Salta&output=embed"
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                  className="h-[250px] w-full border-0"
+                />
+              </div>
+              <a
+                className="secondary-button mt-5 w-full"
+                href="https://www.google.com/maps/search/?api=1&query=Bahia+Corral+Dique+Cabra+Corral"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Cómo llegar <ArrowRight size={15} />
+              </a>
+            </div>
+          </section>
+        </div>
+        <section className="hidden bg-sand py-16 md:block md:py-20">
+          <div className="public-container grid items-center gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
+            <div>
+              <p className="public-kicker">Ubicación</p>
+              <h2 className="editorial section-heading mt-4">Dique Cabra Corral, Salta</h2>
+              <p className="mt-4 max-w-[450px] text-xs leading-6 text-muted">
+                Bahía Corral se encuentra a orillas del Dique Cabra Corral, uno de los espejos de
+                agua más imponentes del norte argentino. Un entorno de sierras, vegetación nativa y
+                atardeceres únicos.
+              </p>
+              <address className="mt-7 not-italic text-xs leading-6 text-muted">
+                <p className="flex items-start gap-3">
+                  <MapPin size={16} className="shrink-0" />
+                  Ruta 47 Km 4,5 Coronel Moldes, Dique Cabra Corral, 4421, Salta
+                </p>
+                <p className="mt-3 flex items-center gap-3">
+                  <Phone size={16} />
+                  <a href="tel:+543875330834" className="underline underline-offset-4">
+                    387 533-0834
+                  </a>
+                </p>
+                <p className="mt-3 flex items-center gap-3">
+                  <Mail size={16} />
+                  <a href="mailto:reservas@bahiacorral.com">reservas@bahiacorral.com</a>
+                </p>
+              </address>
+            </div>
+            <div className="overflow-hidden rounded-2xl bg-[#d9e9dc] shadow-sm">
               <iframe
                 title="Ubicación de Bahía Corral en Google Maps"
                 src="https://www.google.com/maps?q=Bahia%20Corral%20Dique%20Cabra%20Corral%20Salta&output=embed"
                 loading="lazy"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
-                className="h-[250px] w-full border-0"
+                className="h-[280px] w-full border-0 md:h-[340px]"
               />
             </div>
+          </div>
+          <div className="public-container mt-5 text-center md:hidden">
             <a
-              className="secondary-button mt-5 w-full"
+              className="secondary-button w-full"
               href="https://www.google.com/maps/search/?api=1&query=Bahia+Corral+Dique+Cabra+Corral"
               target="_blank"
               rel="noreferrer"
@@ -259,56 +317,6 @@ export default function HomePage() {
             </a>
           </div>
         </section>
-        </div>
-      <section className="hidden bg-sand py-16 md:block md:py-20">
-        <div className="public-container grid items-center gap-10 md:grid-cols-[.8fr_1.2fr] md:gap-16">
-          <div>
-            <p className="public-kicker">Ubicación</p>
-            <h2 className="editorial section-heading mt-4">Dique Cabra Corral, Salta</h2>
-            <p className="mt-4 max-w-[450px] text-xs leading-6 text-muted">
-              Bahía Corral se encuentra a orillas del Dique Cabra Corral, uno de los espejos de agua
-              más imponentes del norte argentino. Un entorno de sierras, vegetación nativa y
-              atardeceres únicos.
-            </p>
-            <address className="mt-7 not-italic text-xs leading-6 text-muted">
-              <p className="flex items-start gap-3">
-                <MapPin size={16} className="shrink-0" />
-                Ruta 47 Km 4,5 Coronel Moldes, Dique Cabra Corral, 4421, Salta
-              </p>
-              <p className="mt-3 flex items-center gap-3">
-                <Phone size={16} />
-                <a href="tel:+543875330834" className="underline underline-offset-4">
-                  387 533-0834
-                </a>
-              </p>
-              <p className="mt-3 flex items-center gap-3">
-                <Mail size={16} />
-                <a href="mailto:reservas@bahiacorral.com">reservas@bahiacorral.com</a>
-              </p>
-            </address>
-          </div>
-          <div className="overflow-hidden rounded-2xl bg-[#d9e9dc] shadow-sm">
-            <iframe
-              title="Ubicación de Bahía Corral en Google Maps"
-              src="https://www.google.com/maps?q=Bahia%20Corral%20Dique%20Cabra%20Corral%20Salta&output=embed"
-              loading="lazy"
-              referrerPolicy="strict-origin-when-cross-origin"
-              allowFullScreen
-              className="h-[280px] w-full border-0 md:h-[340px]"
-            />
-          </div>
-        </div>
-        <div className="public-container mt-5 text-center md:hidden">
-          <a
-            className="secondary-button w-full"
-            href="https://www.google.com/maps/search/?api=1&query=Bahia+Corral+Dique+Cabra+Corral"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Cómo llegar <ArrowRight size={15} />
-          </a>
-        </div>
-      </section>
       </div>
 
       <section className="public-container hidden py-24 md:block">

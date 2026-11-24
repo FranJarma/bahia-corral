@@ -19,7 +19,11 @@ export function SiteFooter() {
     <footer className="bg-[#fcfaf6] text-ink">
       <div className="public-container grid gap-10 py-16 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-12 md:py-20">
         <div>
-          <Link href="/#hero" className="inline-block" aria-label="Bahía Corral, volver al hero de inicio">
+          <Link
+            href="/#hero"
+            className="inline-block"
+            aria-label="Bahía Corral, volver al hero de inicio"
+          >
             <Image
               src="/images/logo-bahia-corral.png"
               width={129}
