@@ -220,43 +220,60 @@ for (const width of [1280, 390]) {
       const rows = (await (await page.request.get('/api/admin/reservations')).json()).reservations;
       const reservation = rows.find((r: { unit_name: string }) => r.unit_name === unit.name);
       expect(reservation).toBeTruthy();
-      const reservationRow = page.getByRole('row').filter({ has: page.getByRole('link', {name: reservation.reference, exact: true}) });
+      const reservationRow = page
+        .getByRole('row')
+        .filter({ has: page.getByRole('link', { name: reservation.reference, exact: true }) });
       const actions = reservationRow.getByRole('cell').last();
       await expect(actions.locator('a,button')).toHaveText(['Ver', 'Editar', 'Registrar Pago']);
-      await expect(page.getByText('Más acciones', {exact:true})).toHaveCount(0);
+      await expect(page.getByText('Más acciones', { exact: true })).toHaveCount(0);
       const tableBox = reservationRow.locator('xpath=ancestor::table/..');
-      expect(await tableBox.evaluate(el => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
-      await page.screenshot({path: info.outputPath('acciones-reserva.png'), fullPage:true});
-      await actions.getByRole('link', {name:'Ver',exact:true}).click();
-      await expect(page).toHaveURL(url=>url.pathname==='/admin/reservas/'+reservation.id);
-      await expect(page.getByRole('heading',{name:'Reserva '+reservation.reference,exact:true})).toBeVisible();
+      expect(await tableBox.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
+      await page.screenshot({ path: info.outputPath('acciones-reserva.png'), fullPage: true });
+      await actions.getByRole('link', { name: 'Ver', exact: true }).click();
+      await expect(page).toHaveURL((url) => url.pathname === '/admin/reservas/' + reservation.id);
+      await expect(
+        page.getByRole('heading', { name: 'Reserva ' + reservation.reference, exact: true }),
+      ).toBeVisible();
       await page.goto('/admin/reservas');
-      await actions.getByRole('button', {name:'Editar',exact:true}).click();
-      const editReservation = page.getByRole('dialog',{name:'Editar reserva',exact:true});
-      await expect(editReservation.getByLabel('Ingreso',{exact:false})).toHaveValue('2027-04-10');
-      await editReservation.getByLabel('Salida',{exact:false}).fill('2027-04-12');
-      await editReservation.getByLabel('Menores',{exact:false}).fill('2');
-      await editReservation.getByLabel('Edad del menor 1',{exact:false}).fill('3');
-      await editReservation.getByLabel('Edad del menor 2',{exact:false}).fill('7');
-      await editReservation.getByLabel('Motivo del cambio',{exact:false}).fill('Cambio de estadía de prueba');
-      await page.screenshot({path:info.outputPath('editar-reserva.png'),fullPage:true});
-      await editReservation.getByRole('button',{name:'Guardar cambios',exact:true}).click();
+      await actions.getByRole('button', { name: 'Editar', exact: true }).click();
+      const editReservation = page.getByRole('dialog', { name: 'Editar reserva', exact: true });
+      await expect(editReservation.getByLabel('Ingreso', { exact: false })).toHaveValue(
+        '2027-04-10',
+      );
+      await editReservation.getByLabel('Salida', { exact: false }).fill('2027-04-12');
+      await editReservation.getByLabel('Menores', { exact: false }).fill('2');
+      await editReservation.getByLabel('Edad del menor 1', { exact: false }).fill('3');
+      await editReservation.getByLabel('Edad del menor 2', { exact: false }).fill('7');
+      await editReservation
+        .getByLabel('Motivo del cambio', { exact: false })
+        .fill('Cambio de estadía de prueba');
+      await page.screenshot({ path: info.outputPath('editar-reserva.png'), fullPage: true });
+      await editReservation.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
       await expect(editReservation).not.toBeVisible();
-      const edited = await (await page.request.get('/api/admin/reservations/'+reservation.id)).json();
+      const edited = await (
+        await page.request.get('/api/admin/reservations/' + reservation.id)
+      ).json();
       expect(edited.reservation.checkout).toBe('2027-04-12');
-      expect(edited.reservation.childAges).toEqual([3,7]);
-      await actions.getByRole('button',{name:'Editar',exact:true}).click();
-      await expect(editReservation.getByLabel('Edad del menor 2',{exact:false})).toHaveValue('7');
-      await editReservation.getByRole('button',{name:'Cancelar',exact:true}).click();
-      await actions.getByRole('button',{name:'Registrar Pago',exact:true}).click();
-      const payment = page.getByRole('dialog',{name:'Registrar Pago',exact:true});
-      await expect(payment.getByRole('combobox',{name:'Reserva',exact:true})).toHaveValue(reservation.id);
-      await payment.getByLabel('Importe recibido (ARS)',{exact:false}).fill('100');
-      await payment.getByRole('button',{name:'Registrar pago',exact:true}).click();
+      expect(edited.reservation.childAges).toEqual([3, 7]);
+      await actions.getByRole('button', { name: 'Editar', exact: true }).click();
+      await expect(editReservation.getByLabel('Edad del menor 2', { exact: false })).toHaveValue(
+        '7',
+      );
+      await editReservation.getByRole('button', { name: 'Cancelar', exact: true }).click();
+      await actions.getByRole('button', { name: 'Registrar Pago', exact: true }).click();
+      const payment = page.getByRole('dialog', { name: 'Registrar Pago', exact: true });
+      await expect(payment.getByRole('combobox', { name: 'Reserva', exact: true })).toHaveValue(
+        reservation.id,
+      );
+      await payment.getByLabel('Importe recibido (ARS)', { exact: false }).fill('100');
+      await payment.getByRole('button', { name: 'Registrar pago', exact: true }).click();
       await expect(payment).not.toBeVisible();
-      await expect(page.getByText('Pago registrado correctamente.',{exact:true})).toBeVisible();
-      const updatedRows = (await (await page.request.get('/api/admin/reservations')).json()).reservations;
-      expect(updatedRows.find((row:{id:string})=>row.id===reservation.id).paid_cents).toBe('10000');
+      await expect(page.getByText('Pago registrado correctamente.', { exact: true })).toBeVisible();
+      const updatedRows = (await (await page.request.get('/api/admin/reservations')).json())
+        .reservations;
+      expect(updatedRows.find((row: { id: string }) => row.id === reservation.id).paid_cents).toBe(
+        '10000',
+      );
       await page.goto('/admin/pagos');
       await expect(page.getByPlaceholder('UUID de la reserva')).toHaveCount(0);
       await page.getByLabel('Reserva', { exact: false }).selectOption(reservation.id);
