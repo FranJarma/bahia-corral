@@ -222,7 +222,7 @@ for (const width of [1280, 390]) {
       expect(reservation).toBeTruthy();
       const reservationRow = page
         .getByRole('row')
-        .filter({ has: page.getByRole('link', { name: reservation.reference, exact: true }) });
+        .filter({ has: page.getByRole('button', { name: reservation.reference, exact: true }) });
       const actions = reservationRow.getByRole('cell').last();
       await expect(actions.locator('a,button')).toHaveText(['Ver', 'Editar', 'Registrar Pago']);
       await expect(page.getByText('Más acciones', { exact: true })).toHaveCount(0);
@@ -230,12 +230,17 @@ for (const width of [1280, 390]) {
       expect(await tableBox.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
       await actions.scrollIntoViewIfNeeded();
       await page.screenshot({ path: info.outputPath('acciones-reserva.png'), fullPage: true });
-      await actions.getByRole('link', { name: 'Ver', exact: true }).click();
-      await expect(page).toHaveURL((url) => url.pathname === '/admin/reservas/' + reservation.id);
+      await actions.getByRole('button', { name: 'Ver', exact: true }).click();
+      await expect(page).toHaveURL(/\/admin\/reservas$/);
+      const detail = page.getByRole('dialog', { name: 'Reserva ' + reservation.reference, exact: true });
+      await expect(detail).toBeVisible();
+      await expect(detail.getByText('CONFIRMED', { exact: true })).toHaveCount(0);
+      await expect(detail.getByText('Confirmada', { exact: true })).toBeVisible();
       await expect(
         page.getByRole('heading', { name: 'Reserva ' + reservation.reference, exact: true }),
       ).toBeVisible();
-      await page.goto('/admin/reservas');
+      await detail.getByRole('button', { name: 'Cerrar', exact: true }).click();
+      await expect(actions.getByRole('button', { name: 'Ver', exact: true })).toBeFocused();
       await actions.getByRole('button', { name: 'Editar', exact: true }).click();
       const editReservation = page.getByRole('dialog', { name: 'Editar reserva', exact: true });
       await expect(editReservation.getByLabel('Ingreso', { exact: false })).toHaveValue(
