@@ -70,7 +70,7 @@ export async function startCheckout(
     const expiresAt = holdExpiresAt(new Date());
     await tx.execute(sql`INSERT INTO stay_quotes(id,tenant_id,unit_id,checkin,checkout,adults,child_ages,nights,amount_cents,deposit_cents,currency,terms_version)
       VALUES(${quoteId},${ctx.tenantId},${quote.unitId},${quote.checkin}::date,${quote.checkout}::date,${quote.adults},
-        ${quote.childAges},${JSON.stringify(serialized.nights)}::jsonb,${serialized.totalCents},${serialized.depositCents},'ARS','v1')`);
+        ${sql.param(quote.childAges)}::integer[],${JSON.stringify(serialized.nights)}::jsonb,${serialized.totalCents},${serialized.depositCents},'ARS','v1')`);
     await tx.execute(sql`INSERT INTO reservation_holds(id,tenant_id,unit_id,quote_id,expires_at,checkout_token_hash,status)
       VALUES(${holdId},${ctx.tenantId},${quote.unitId},${quoteId},${expiresAt.toISOString()}::timestamptz,${tokenHash},'ACTIVE')`);
     // Exclusión GiST en PostgreSQL decide quién gana si llegan dos peticiones simultáneas.

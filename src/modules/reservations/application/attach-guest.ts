@@ -78,7 +78,7 @@ export async function attachGuestToHold(
     await tx.execute(sql`INSERT INTO reservations
       (id,tenant_id,reference,unit_id,guest_id,quote_id,checkin,checkout,adults,child_ages,origin,balance_due_policy,terms_version)
       VALUES(${reservationId},${ctx.tenantId},${reference},${hold.unit_id},${guestId},${hold.quote_id},${quote.checkin}::date,${quote.checkout}::date,
-        ${quote.adults},${quote.child_ages},${input.origin},${input.balanceDuePolicy ?? tenant.balance_due_policy},${quote.terms_version})`);
+        ${quote.adults},${sql.param(quote.child_ages)}::integer[],${input.origin},${input.balanceDuePolicy ?? tenant.balance_due_policy},${quote.terms_version})`);
     await tx.execute(
       sql`UPDATE reservation_holds SET reservation_id=${reservationId} WHERE tenant_id=${ctx.tenantId} AND id=${input.holdId}`,
     );

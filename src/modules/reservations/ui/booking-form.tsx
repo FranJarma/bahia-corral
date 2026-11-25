@@ -331,6 +331,14 @@ export function BookingForm({
                   />
                 </ValidatedLabel>
               </div>
+              <p role="status" aria-live="polite" className="text-xs text-muted">
+                Cantidad de noches:{' '}
+                <output aria-label="Cantidad de noches" className="font-semibold text-ink">
+                  {nights > 0
+                    ? `${nights} ${nights === 1 ? 'noche' : 'noches'}`
+                    : 'Elegí fechas válidas'}
+                </output>
+              </p>
               <div className="public-field-group">
                 <label className="public-form-label">
                   Adultos *
