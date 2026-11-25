@@ -39,7 +39,8 @@ function messageFor(control: Control) {
   if (control.validity.valueMissing) return 'Este dato es obligatorio';
   if (control.validity.typeMismatch && control.type === 'email')
     return 'Ingresá un correo electrónico válido';
-  if (control.validity.tooShort) return `Ingresá al menos ${control.minLength} caracteres`;
+  if (control.validity.tooShort && 'minLength' in control)
+    return `Ingresá al menos ${control.minLength} caracteres`;
   if (control.validity.patternMismatch) return 'Revisá el formato ingresado';
   if (control.validity.rangeUnderflow) return 'El valor ingresado es demasiado bajo';
   if (control.validity.rangeOverflow) return 'El valor ingresado es demasiado alto';
