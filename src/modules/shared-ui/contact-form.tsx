@@ -1,8 +1,9 @@
 'use client';
 
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
+
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 const interests = ['Alquiler de cabañas', 'SPA', 'Excursión náutica', 'Restaurante'];
 

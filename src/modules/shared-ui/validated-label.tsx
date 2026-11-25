@@ -2,12 +2,12 @@
 
 import {
   Children,
-  isValidElement,
-  useId,
-  useState,
   type ComponentProps,
   type FormEvent,
+  isValidElement,
   type ReactNode,
+  useId,
+  useState,
 } from 'react';
 
 type Control = HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
@@ -102,7 +102,11 @@ export function ValidatedLabel({ children, required, ...props }: Props) {
       </span>
       {content}
       {error && (
-        <span id={errorId} role="alert" className="block text-[12px] font-medium leading-5 text-red-700">
+        <span
+          id={errorId}
+          role="alert"
+          className="block text-[12px] font-medium leading-5 text-red-700"
+        >
           {error}
         </span>
       )}

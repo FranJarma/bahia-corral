@@ -1,8 +1,9 @@
 'use client';
 
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight, X } from 'lucide-react';
 import { useState } from 'react';
+
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 type RateRow = {
   unit_id: string;

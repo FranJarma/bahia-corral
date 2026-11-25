@@ -1,10 +1,10 @@
 'use client';
 
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import Link from 'next/link';
 import { type FormEvent, useState } from 'react';
 
 import { authClient } from '@/modules/identity-access/ui/auth-client';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');

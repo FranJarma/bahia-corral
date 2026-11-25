@@ -1,12 +1,12 @@
 'use client';
 
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight, CalendarDays, Check, ChevronDown, Home, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { PUBLIC_UNITS } from '@/modules/accommodations/domain/seed-units';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 type Step = 'DATES' | 'CONTACT' | 'PAYMENT';
 type Hold = {

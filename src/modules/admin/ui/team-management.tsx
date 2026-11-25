@@ -1,6 +1,7 @@
 'use client';
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
+
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export type MemberSummary = {
   id: string;

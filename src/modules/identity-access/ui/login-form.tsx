@@ -1,11 +1,11 @@
 'use client';
 
-import { PasswordInput } from '@/modules/shared-ui/password-input';
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import Link from 'next/link';
 import { useState } from 'react';
 
 import { authClient } from '@/modules/identity-access/ui/auth-client';
+import { PasswordInput } from '@/modules/shared-ui/password-input';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function LoginForm() {
   const [username, setUsername] = useState('');

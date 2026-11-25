@@ -1,10 +1,10 @@
 'use client';
 
-import { PasswordInput } from '@/modules/shared-ui/password-input';
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
 
 import { authClient as auth } from '@/modules/identity-access/ui/auth-client';
+import { PasswordInput } from '@/modules/shared-ui/password-input';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function InvitationForm({ token }: { token: string }) {
   const [email, setEmail] = useState('');

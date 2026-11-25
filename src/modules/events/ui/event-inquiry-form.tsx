@@ -1,9 +1,10 @@
 'use client';
 
-import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function EventInquiryForm() {
   const [busy, setBusy] = useState(false);
@@ -64,7 +65,7 @@ export function EventInquiryForm() {
         </div>
         <div className="public-field-group mt-7">
           <ValidatedLabel className="public-form-label">
-            Tipo de evento 
+            Tipo de evento
             <select required name="eventType" defaultValue="">
               <option value="" disabled>
                 Seleccionar
