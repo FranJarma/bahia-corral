@@ -43,6 +43,7 @@ async function providerFetch(path: string, options?: RequestInit) {
   return body;
 }
 export function createMercadoPagoGateway(): PaymentGateway {
+  providerToken(); // Validación local antes de alterar el estado del checkout.
   return {
     async createCheckout(input) {
       const base = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';

@@ -8,8 +8,10 @@ import {
   runTenantTx,
   type TenantContext,
 } from '@/infrastructure/db/tenant-transaction';
-
-export type GuestContact = { firstName: string; lastName: string; phone: string; email?: string };
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
+import { resolveGuest } from '@/modules/guests/application/resolve-guest';
+import type { GuestContact } from '@/modules/guests/domain/guest-contact';
+export type { GuestContact } from '@/modules/guests/domain/guest-contact';
 export type ReservationOrigin = 'WEB' | 'PHONE' | 'WHATSAPP' | 'FRONT_DESK';
 export type AttachGuestInput = {
   holdId: string;
@@ -32,7 +34,10 @@ export async function attachGuestToHold(
     throw new Error('Nombre, apellido y teléfono son obligatorios');
   if (input.origin === 'WEB' && !/^\S+@\S+\.\S+$/.test(input.contact.email ?? ''))
     throw new Error('Se necesita email para la reserva web');
-  return runTenantTx(ctx, async (tx) => {
+  await releaseExpiredHolds(ctx);
+  const result = await runTenantTx(ctx, async (tx) => {
+    // La identidad se bloquea antes del hold para serializar intentos del mismo contacto.
+    const guestId = await resolveGuest(tx, ctx.tenantId, input.contact);
     const current = resultRows<{
       unit_id: string;
       quote_id: string;
@@ -49,18 +54,46 @@ export async function attachGuestToHold(
     const hold = current[0];
     if (
       !hold ||
-      hold.status !== 'ACTIVE' ||
-      new Date(hold.expires_at).valueOf() <= Date.now() ||
-      hold.reservation_id ||
+      !['ACTIVE', 'VERIFYING', 'UNCERTAIN'].includes(hold.status) ||
+      (hold.status === 'ACTIVE' && new Date(hold.expires_at).valueOf() <= Date.now()) ||
       !hold.checkout_token_hash ||
       createHash('sha256').update(input.checkoutToken).digest('hex') !== hold.checkout_token_hash
     )
       throw new Error('El bloqueo ya no está disponible');
-    const guestId = randomUUID();
+    if (hold.reservation_id) {
+      const [existing] = resultRows<{ id: string; reference: string; guest_id: string }>(
+        await tx.execute(sql`SELECT id,reference,guest_id FROM reservations
+          WHERE tenant_id=${ctx.tenantId} AND id=${hold.reservation_id}`),
+      );
+      if (!existing || existing.guest_id !== guestId)
+        throw new Error('El checkout ya no está disponible');
+      return { reservationId: existing.id, reference: existing.reference };
+    }
+    if (hold.status !== 'ACTIVE') throw new Error('El checkout ya no está disponible');
+    if (input.origin === 'WEB') {
+      const [pending] = resultRows<{ id: string }>(
+        await tx.execute(sql`
+        SELECT r.id FROM reservations r JOIN reservation_holds h
+          ON h.tenant_id=r.tenant_id AND h.reservation_id=r.id
+        WHERE r.tenant_id=${ctx.tenantId} AND r.guest_id=${guestId}
+          AND r.status='PENDING_CONFIRMATION'
+          AND (h.status IN ('VERIFYING','UNCERTAIN') OR
+            (h.status='ACTIVE' AND (h.expires_at>now() OR h.payment_started_at IS NOT NULL
+              OR EXISTS(SELECT 1 FROM payments p WHERE p.tenant_id=r.tenant_id AND p.reservation_id=r.id))))
+        LIMIT 1`),
+      );
+      if (pending) {
+        // Sólo liberamos el intento nuevo del que se probó posesión. No exponemos el anterior.
+        await tx.execute(
+          sql`UPDATE reservation_holds SET status='EXPIRED' WHERE tenant_id=${ctx.tenantId} AND id=${input.holdId}`,
+        );
+        await tx.execute(sql`UPDATE inventory_allocations SET active=false,updated_at=now()
+          WHERE tenant_id=${ctx.tenantId} AND hold_id=${input.holdId} AND reason='HOLD'`);
+        return null;
+      }
+    }
     const reservationId = randomUUID();
     const reference = `BC-${new Date().getUTCFullYear()}-${reservationId.slice(0, 8).toUpperCase()}`;
-    await tx.execute(sql`INSERT INTO guests(id,tenant_id,first_name,last_name,email,phone)
-      VALUES(${guestId},${ctx.tenantId},${input.contact.firstName.trim()},${input.contact.lastName.trim()},${input.contact.email?.trim().toLowerCase() ?? null},${input.contact.phone.trim()})`);
     const [quote] = resultRows<{
       checkin: string;
       checkout: string;
@@ -84,4 +117,9 @@ export async function attachGuestToHold(
     );
     return { reservationId, reference };
   });
+  if (!result)
+    throw new Error(
+      'Ya tenés una reserva pendiente. Retomala desde este navegador o verificá tu correo y referencia en Mis reservas.',
+    );
+  return result;
 }

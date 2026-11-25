@@ -8,6 +8,7 @@ import {
 } from '@/infrastructure/db/tenant-transaction';
 import { sendMail } from '@/infrastructure/email/mail-port';
 import { createTriggerJobAdapter, type JobAdapter } from '@/infrastructure/jobs/job-adapter';
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 
 export async function dispatchOutbox(
   ctx: TenantContext,
@@ -18,7 +19,7 @@ export async function dispatchOutbox(
       await tx.execute(sql`
     SELECT id,kind,entity_id,due_at,version FROM outbox_jobs
     WHERE tenant_id=${ctx.tenantId} AND status IN ('PENDING','FAILED')
-    AND due_at<=now()+interval '365 days' ORDER BY due_at LIMIT 50 FOR UPDATE SKIP LOCKED`),
+    AND due_at<=now()+interval '365 days' AND (kind<>'CHECKOUT_EXPIRED' OR due_at<=now()) ORDER BY due_at LIMIT 50 FOR UPDATE SKIP LOCKED`),
     ),
   );
   let dispatched = 0;
@@ -71,6 +72,7 @@ export async function executeOutboxJob(jobId: string, tenantId: string) {
   });
   if (!job) return;
   try {
+    if (job.kind === 'CHECKOUT_EXPIRED') await releaseExpiredHolds(ctx);
     if (job.kind.startsWith('BALANCE_REMINDER_') || job.kind === 'RESERVATION_CONFIRMED') {
       const payload = await runTenantTx(ctx, async (tx) => {
         const records = resultRows<{
@@ -126,5 +128,7 @@ export async function executeOutboxJob(jobId: string, tenantId: string) {
 
 export async function dispatchDefaultTenant() {
   const tenantId = await getDefaultTenantId();
-  return dispatchOutbox({ tenantId, actorId: 'scheduler', actorType: 'SYSTEM' });
+  const ctx = { tenantId, actorId: 'scheduler', actorType: 'SYSTEM' as const };
+  await releaseExpiredHolds(ctx);
+  return dispatchOutbox(ctx);
 }

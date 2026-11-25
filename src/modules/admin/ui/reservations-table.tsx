@@ -1,49 +1,41 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { ManualPaymentForm } from '@/modules/admin/ui/manual-payment-form';
 import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
 import { EditReservationForm } from '@/modules/reservations/ui/edit-reservation-form';
+import { ReservationDetails } from '@/modules/reservations/ui/reservation-details';
+import {
+  formatReservationDate as date,
+  formatReservationMoney as peso,
+  RESERVATION_STATUS_LABELS as statuses,
+} from '@/modules/reservations/ui/reservation-format';
 import { AdminDialog } from '@/modules/shared-ui/admin-dialog';
 import { SearchField } from '@/modules/shared-ui/search-field';
 
 const actionClassName =
   'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-xs font-semibold hover:bg-cream hover:underline disabled:cursor-not-allowed disabled:opacity-40';
-const statuses: Record<string, string> = {
-  CONFIRMED: 'Confirmada',
-  PENDING_CONFIRMATION: 'Por confirmar',
-  IN_STAY: 'En estadía',
-  COMPLETED: 'Finalizada',
-  CANCELLED: 'Cancelada',
-  NOT_COMPLETED: 'No completada',
-  NO_SHOW: 'No se presentó',
-};
 const archivedStatuses = ['COMPLETED', 'CANCELLED', 'NOT_COMPLETED', 'NO_SHOW'];
-function peso(value: string) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0,
-  }).format(Number(BigInt(value)) / 100);
-}
-function date(value: string) {
-  return new Intl.DateTimeFormat('es-AR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${value}T12:00:00Z`));
-}
-
-export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
+export function ReservationsTable({
+  rows,
+  initialReservationId,
+}: {
+  rows: ReservationSummary[];
+  initialReservationId?: string;
+}) {
   const router = useRouter();
   const [active, setActive] = useState<{
-    mode: 'edit' | 'payment';
+    mode: 'view' | 'edit' | 'payment';
     reservation: ReservationSummary;
-  } | null>(null);
+  } | null>(() => {
+    const reservation = rows.find((r) => r.id === initialReservationId);
+    return reservation ? { mode: 'view', reservation } : null;
+  });
+  const selected = active
+    ? (rows.find((r) => r.id === active.reservation.id) ?? active.reservation)
+    : null;
   const [message, setMessage] = useState('');
   function saved(text: string) {
     setActive(null);
@@ -156,12 +148,13 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
               return (
                 <tr key={r.id}>
                   <td>
-                    <Link
-                      className="font-semibold hover:underline"
-                      href={`/admin/reservas/${r.id}`}
+                    <button
+                      type="button"
+                      className="min-h-11 text-left font-semibold hover:underline"
+                      onClick={() => setActive({ mode: 'view', reservation: r })}
                     >
                       {r.reference}
-                    </Link>
+                    </button>
                     <p className="mt-1">{r.guest_name}</p>
                     <p className="mt-1 text-muted">{r.unit_name}</p>
                   </td>
@@ -186,9 +179,13 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
                   </td>
                   <td>
                     <div className="flex items-center gap-1 whitespace-nowrap">
-                      <Link className={actionClassName} href={`/admin/reservas/${r.id}`}>
+                      <button
+                        type="button"
+                        className={actionClassName}
+                        onClick={() => setActive({ mode: 'view', reservation: r })}
+                      >
                         Ver
-                      </Link>
+                      </button>
                       <button
                         type="button"
                         className={actionClassName}
@@ -241,7 +238,13 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
         onOpenChange={(open) => {
           if (!open) setActive(null);
         }}
-        title={active?.mode === 'edit' ? 'Editar reserva' : 'Registrar Pago'}
+        title={
+          active?.mode === 'view'
+            ? 'Reserva ' + active.reservation.reference
+            : active?.mode === 'edit'
+              ? 'Editar reserva'
+              : 'Registrar Pago'
+        }
         description={
           active
             ? active.reservation.reference +
@@ -252,7 +255,9 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
             : ''
         }
       >
-        {active?.mode === 'edit' ? (
+        {active?.mode === 'view' && selected ? (
+          <ReservationDetails reservation={selected} onSaved={() => router.refresh()} />
+        ) : active?.mode === 'edit' ? (
           <EditReservationForm
             key={active.reservation.id}
             reservationId={active.reservation.id}

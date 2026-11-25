@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { getDefaultTenantId } from '@/infrastructure/db/get-tenant';
+import { CHECKOUT_COOKIE, checkoutCookieOptions } from '@/infrastructure/http/checkout-cookie';
 import {
   assertTrustedOrigin,
   failResponse,
@@ -25,13 +26,15 @@ export async function POST(request: NextRequest) {
     assertTrustedOrigin(request);
     const data = await jsonInput(request, input);
     const tenantId = await getDefaultTenantId();
-    return successJson(
+    const response = successJson(
       await attachGuestToHold(
         { tenantId, actorId: 'public-checkout', actorType: 'SYSTEM' },
         { ...data, origin: 'WEB' },
       ),
       201,
     );
+    response.cookies.set(CHECKOUT_COOKIE, data.checkoutToken, checkoutCookieOptions);
+    return response;
   } catch (error) {
     return failResponse(error);
   }

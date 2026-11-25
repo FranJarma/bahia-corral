@@ -5,6 +5,8 @@ import { z } from 'zod';
 
 import { appendAuditEvent } from '@/infrastructure/audit/append-audit-event';
 import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
+import { findGuestByContact } from '@/modules/guests/application/resolve-guest';
+import { normalizeGuestContact } from '@/modules/guests/domain/guest-contact';
 import type { AdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 
@@ -28,7 +30,7 @@ export async function listAdminGuests(actor: AdminActor) {
     async (tx) =>
       resultRows<AdminGuest>(
         await tx.execute(
-          sql`SELECT id,first_name,last_name,phone,email FROM guests WHERE tenant_id=${actor.tenantId} ORDER BY created_at DESC LIMIT 250`,
+          sql`SELECT id,first_name,last_name,phone,email FROM guests WHERE tenant_id=${actor.tenantId} AND merged_into_id IS NULL ORDER BY created_at DESC LIMIT 250`,
         ),
       ),
   );
@@ -40,7 +42,7 @@ export async function saveGuest(actor: AdminActor, raw: unknown, id?: string) {
     const old = id
       ? resultRows<AdminGuest>(
           await tx.execute(
-            sql`SELECT id,first_name,last_name,phone,email FROM guests WHERE tenant_id=${actor.tenantId} AND id=${id} FOR UPDATE`,
+            sql`SELECT id,first_name,last_name,phone,email FROM guests WHERE tenant_id=${actor.tenantId} AND id=${id} AND merged_into_id IS NULL FOR UPDATE`,
           ),
         )[0]
       : undefined;
@@ -54,15 +56,21 @@ export async function saveGuest(actor: AdminActor, raw: unknown, id?: string) {
         }
       : { email: '' };
     const data = schema.parse({ ...previous, ...schema.partial().parse(raw) });
+    const clean = normalizeGuestContact(data);
+    const existing = await findGuestByContact(tx, actor.tenantId, data);
+    if (existing && existing.id !== id)
+      throw new Error(
+        'Ya existe un huésped con ese correo o contacto. Buscalo en el listado para editarlo.',
+      );
     const guestId = id ?? randomUUID(),
-      email = data.email.toLowerCase() || null;
+      email = clean.email;
     if (id)
       await tx.execute(
-        sql`UPDATE guests SET first_name=${data.firstName},last_name=${data.lastName},phone=${data.phone},email=${email} WHERE tenant_id=${actor.tenantId} AND id=${id}`,
+        sql`UPDATE guests SET first_name=${clean.firstName},last_name=${clean.lastName},phone=${clean.phone},email=${email} WHERE tenant_id=${actor.tenantId} AND id=${id}`,
       );
     else
       await tx.execute(
-        sql`INSERT INTO guests(id,tenant_id,first_name,last_name,phone,email) VALUES(${guestId},${actor.tenantId},${data.firstName},${data.lastName},${data.phone},${email})`,
+        sql`INSERT INTO guests(id,tenant_id,first_name,last_name,phone,email) VALUES(${guestId},${actor.tenantId},${clean.firstName},${clean.lastName},${clean.phone},${email})`,
       );
     await appendAuditEvent(tx, {
       ...ctx,

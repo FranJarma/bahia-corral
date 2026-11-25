@@ -26,7 +26,7 @@ export function failResponse(error: unknown) {
     if (/(Origen|autorizado|permiso)/i.test(error.message))
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     if (
-      /(Bloqueo|disponible|superpuest|capacidad|seña|tarifa|fecha|Email|correo|ingreso)/i.test(
+      /(Bloqueo|disponible|superpuest|capacidad|seña|tarifa|fecha|Email|correo|ingreso|huésped|checkout|venció|pendiente)/i.test(
         error.message,
       )
     )

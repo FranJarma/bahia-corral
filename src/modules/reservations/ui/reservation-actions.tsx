@@ -1,12 +1,18 @@
 'use client';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 export function ReservationActions({
   reservationId,
   status,
+  embedded = false,
+  onSaved,
 }: {
   reservationId: string;
   status: string;
+  embedded?: boolean;
+  onSaved?: () => void;
 }) {
+  const router = useRouter();
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
@@ -24,7 +30,9 @@ export function ReservationActions({
       });
       const d = (await r.json()) as { error?: string };
       if (!r.ok) throw new Error(d.error ?? 'No pudo realizarse la acción');
-      setMessage('Cambio guardado. Actualizá la página para ver el nuevo estado.');
+      setMessage('Cambio guardado.');
+      router.refresh();
+      onSaved?.();
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Error');
     } finally {
@@ -32,7 +40,11 @@ export function ReservationActions({
     }
   }
   return (
-    <aside className="surface-card grid h-fit gap-4 p-6">
+    <aside
+      className={
+        embedded ? 'grid gap-4 border-t border-[#e1d5c5] pt-6' : 'surface-card grid h-fit gap-4 p-6'
+      }
+    >
       <h2 className="editorial text-2xl">Acciones</h2>
       <label className="grid gap-2 text-sm font-semibold">
         Motivo (cuando corresponda)

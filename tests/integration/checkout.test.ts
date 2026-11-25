@@ -22,6 +22,8 @@ let db: ReturnType<typeof postgres>;
 let tenantId: string;
 let unitId: string;
 let runtimeReady = false;
+let legacyGuestIds: string[] = [];
+const legacyReservationIds: string[] = [];
 
 beforeAll(async () => {
   pg = await new PostgreSqlContainer('postgres:16-alpine').start();
@@ -36,6 +38,23 @@ beforeAll(async () => {
   unitId = unit.id;
   await db`INSERT INTO base_rates(tenant_id,unit_id,min_guests,max_guests,amount_cents)
     VALUES(${tenantId},${unitId},1,8,14000000)`;
+  const legacy = await db`INSERT INTO guests(tenant_id,first_name,last_name,email,phone) VALUES
+    (${tenantId},'Persona','Anterior','legacy@example.com','3870000000'),
+    (${tenantId},'Persona','Anterior','LEGACY@example.com','3870000000') RETURNING id`;
+  legacyGuestIds = legacy.map((row) => row.id);
+  for (const guest of legacy) {
+    const [quote] =
+      await db`INSERT INTO stay_quotes(tenant_id,unit_id,checkin,checkout,adults,nights,amount_cents,deposit_cents,currency,terms_version)
+      VALUES(${tenantId},${unitId},'2027-07-01','2027-07-02',2,'[]',14000000,7000000,'ARS','v1') RETURNING id`;
+    const [reservation] =
+      await db`INSERT INTO reservations(tenant_id,reference,unit_id,guest_id,quote_id,checkin,checkout,adults,origin,balance_due_policy,terms_version,status)
+      VALUES(${tenantId},${'LEGACY-' + guest.id},${unitId},${guest.id},${quote.id},'2027-07-01','2027-07-02',2,'PHONE','AT_CHECKIN','v1','COMPLETED') RETURNING id`;
+    legacyReservationIds.push(reservation.id);
+    await db`INSERT INTO payments(tenant_id,reservation_id,amount_cents,method,provider,channel)
+      VALUES(${tenantId},${reservation.id},10000,'CASH','MANUAL','MANUAL')`;
+  }
+  await db.unsafe(readFileSync(resolve('drizzle/0003-guest-identity.sql'), 'utf8'));
+  await db.unsafe(readFileSync(resolve('drizzle/0003-guest-identity.sql'), 'utf8'));
   await db`CREATE ROLE checkout_runtime LOGIN PASSWORD 'test_checkout_password' NOSUPERUSER NOBYPASSRLS`;
   await db`GRANT USAGE ON SCHEMA public TO checkout_runtime`;
   await db`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO checkout_runtime`;
@@ -251,4 +270,21 @@ it('un proveedor sin configurar no marca un pago como iniciado', async () => {
   const [requests] =
     await db`SELECT count(*)::int AS count FROM payment_requests WHERE reservation_id=${reservation.reservationId}`;
   expect(requests.count).toBe(0);
+});
+
+it('la consolidación conserva las reservas y pagos existentes y es repetible', async () => {
+  const guests =
+    await db`SELECT id,merged_into_id FROM guests WHERE id IN (${legacyGuestIds[0]},${legacyGuestIds[1]})`;
+  expect(guests).toHaveLength(2);
+  expect(guests.filter((g) => g.merged_into_id === null)).toHaveLength(1);
+  const rows =
+    await db`SELECT DISTINCT guest_id FROM reservations WHERE id IN (${legacyReservationIds[0]},${legacyReservationIds[1]})`;
+  expect(rows).toHaveLength(1);
+  const [payments] = await db`SELECT count(*)::int AS count,sum(amount_cents)::text AS paid
+    FROM payments WHERE reservation_id IN (${legacyReservationIds[0]},${legacyReservationIds[1]})`;
+  expect(payments.count).toBe(2);
+  expect(payments.paid).toBe('20000');
+  const [audit] =
+    await db`SELECT count(*)::int AS count FROM audit_events WHERE action='GUEST_CONSOLIDATED'`;
+  expect(audit.count).toBe(1);
 });

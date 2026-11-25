@@ -6,7 +6,11 @@ import { requirePermission } from '@/modules/identity-access/domain/permissions'
 import { listReservations } from '@/modules/reservations/application/list-reservations';
 
 export const dynamic = 'force-dynamic';
-export default async function AdminReservationsPage() {
+export default async function AdminReservationsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reserva?: string }>;
+}) {
   const actor = await requireAdminActor();
   requirePermission(actor.role, 'reservations:read');
   const rows = await listReservations({
@@ -21,7 +25,7 @@ export default async function AdminReservationsPage() {
         subtitle="Consultá, filtrá y gestioná las reservas del complejo."
         action={<NewReservationDialog />}
       />
-      <ReservationsTable rows={rows} />
+      <ReservationsTable rows={rows} initialReservationId={(await searchParams).reserva} />
     </>
   );
 }

@@ -5,6 +5,7 @@ import {
   runTenantTx,
   type TenantContext,
 } from '@/infrastructure/db/tenant-transaction';
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 
 export type ReservationSummary = {
   id: string;
@@ -19,6 +20,7 @@ export type ReservationSummary = {
   paid_cents: string;
 };
 export async function listReservations(ctx: TenantContext): Promise<ReservationSummary[]> {
+  await releaseExpiredHolds(ctx);
   return runTenantTx(ctx, async (tx) =>
     resultRows<ReservationSummary>(
       await tx.execute(sql`

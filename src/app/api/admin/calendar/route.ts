@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
 import { failResponse, successJson } from '@/infrastructure/http/route';
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,11 @@ export async function GET(request: NextRequest) {
     const q = z
       .object({ from: z.iso.date(), to: z.iso.date() })
       .parse(Object.fromEntries(request.nextUrl.searchParams));
+    await releaseExpiredHolds({
+      tenantId: actor.tenantId,
+      actorId: actor.userId,
+      actorType: 'USER',
+    });
     const data = await runTenantTx(
       { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
       async (tx) => {

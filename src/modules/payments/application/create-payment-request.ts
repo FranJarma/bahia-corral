@@ -14,6 +14,7 @@ export async function createPaymentRequest(
   ctx: TenantContext,
   input: { reservationId: string; purpose: 'DEPOSIT' | 'FULL' | 'BALANCE'; checkoutToken: string },
 ) {
+  const gateway = createMercadoPagoGateway();
   const record = await runTenantTx(ctx, async (tx) => {
     const [reservation] = resultRows<{
       reference: string;
@@ -73,7 +74,7 @@ export async function createPaymentRequest(
     };
   });
   // No retener una transacción PostgreSQL mientras se espera un proveedor externo.
-  const external = await createMercadoPagoGateway().createCheckout({
+  const external = await gateway.createCheckout({
     idempotencyKey: record.requestId,
     reservationReference: record.reference,
     email: record.email,

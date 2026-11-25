@@ -3,9 +3,10 @@
 import { ArrowRight, CalendarDays, Check, ChevronDown, Home, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PUBLIC_UNITS } from '@/modules/accommodations/domain/seed-units';
+import type { CheckoutSession } from '@/modules/availability/domain/checkout-session';
 import { DatePicker } from '@/modules/shared-ui/date-picker';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
@@ -17,7 +18,9 @@ type Hold = {
   totalCents: string;
   depositCents: string;
   checkoutToken: string;
+  status?: 'ACTIVE' | 'VERIFYING' | 'UNCERTAIN';
 };
+type StartResponse = Hold | (CheckoutSession & { resumed: true });
 type ApiError = { error?: string };
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -92,6 +95,9 @@ export function BookingForm({
   const [error, setError] = useState('');
   const [clock, setClock] = useState(0);
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [restoring, setRestoring] = useState(true);
+  const [notice, setNotice] = useState('');
+  const [reservationReference, setReservationReference] = useState('');
   const [today] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -100,13 +106,92 @@ export function BookingForm({
   const nights = numberOfNights(checkin, checkout);
   const capacity = unit?.capacityTotal ?? 8;
   const expired = Boolean(
-    hold && clock >= new Date(hold.expiresAt).getTime() && step === 'CONTACT',
+    hold &&
+    clock >= new Date(hold.expiresAt).getTime() &&
+    (!hold.status || hold.status === 'ACTIVE'),
   );
   const seconds = hold
     ? Math.max(0, Math.floor((new Date(hold.expiresAt).valueOf() - clock) / 1000))
     : 0;
+  const paymentInProgress = hold?.status === 'VERIFYING' || hold?.status === 'UNCERTAIN';
+  const blocked = busy || restoring || expired || (step === 'PAYMENT' && paymentInProgress);
   const total = hold ? formatCents(hold.totalCents) : null;
   const deposit = hold ? formatCents(hold.depositCents) : null;
+
+  const restoreCheckout = useCallback((current: CheckoutSession) => {
+    setSlug(current.slug);
+    setUnitId(current.unitId);
+    setCheckin(current.checkin);
+    setCheckout(current.checkout);
+    setAdults(current.adults);
+    setChildren(current.childAges);
+    setHold({
+      ...current,
+      status:
+        current.status === 'VERIFYING' || current.status === 'UNCERTAIN'
+          ? current.status
+          : 'ACTIVE',
+    });
+    setClock(Date.now());
+    setReservationId(current.reservationId ?? '');
+    setReservationReference(current.reference ?? '');
+    if (current.contact) {
+      setFirstName(current.contact.firstName);
+      setLastName(current.contact.lastName);
+      setEmail(current.contact.email);
+      setPhone(current.contact.phone);
+    }
+    setStep(current.reservationId ? 'PAYMENT' : 'CONTACT');
+    setNotice('Retomamos tu reserva en curso. El plazo original se mantiene.');
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch('/api/public/checkout/session', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error('No pudimos recuperar tu reserva. Intentá nuevamente.');
+        return response.json() as Promise<{ checkout: CheckoutSession | null }>;
+      })
+      .then((data) => {
+        if (!controller.signal.aborted && data.checkout) restoreCheckout(data.checkout);
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error.message : 'No pudimos recuperar tu reserva.');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRestoring(false);
+      });
+    return () => controller.abort();
+  }, [restoreCheckout]);
+  useEffect(() => {
+    if (!expired) return;
+    const controller = new AbortController();
+    fetch('/api/public/checkout/session', { cache: 'no-store', signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok)
+          throw new Error('No pudimos actualizar el vencimiento. Volvé a intentarlo.');
+        return response.json() as Promise<{ checkout: CheckoutSession | null }>;
+      })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        if (data.checkout) {
+          restoreCheckout(data.checkout);
+          return;
+        }
+        setHold(null);
+        setReservationId('');
+        setReservationReference('');
+        setStep('DATES');
+        setNotice(
+          'El plazo de 10 minutos venció y la reserva no se completó. Consultá nuevamente la disponibilidad para empezar.',
+        );
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error.message : 'No pudimos actualizar tu reserva.');
+      });
+    return () => controller.abort();
+  }, [expired, restoreCheckout]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -159,16 +244,19 @@ export function BookingForm({
         throw new Error('Elegí una salida posterior a la llegada.');
       if (adults + children.length > capacity)
         throw new Error('La cantidad de huéspedes supera la capacidad de este alojamiento.');
-      const next = await post<Hold>('/api/public/checkout/start', {
+      const next = await post<StartResponse>('/api/public/checkout/start', {
         unitId,
         checkin,
         checkout,
         adults,
         childAges: children,
       });
-      setHold(next);
-      setClock(Date.now());
-      setStep('CONTACT');
+      if ('resumed' in next && next.resumed) restoreCheckout(next);
+      else {
+        setHold(next);
+        setClock(Date.now());
+        setStep('CONTACT');
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo iniciar tu reserva.');
     } finally {
@@ -180,12 +268,16 @@ export function BookingForm({
     setError('');
     setBusy(true);
     try {
-      const result = await post<{ reservationId: string }>('/api/public/checkout/guest', {
-        holdId: hold.holdId,
-        checkoutToken: hold.checkoutToken,
-        contact: { firstName, lastName, email, phone },
-      });
+      const result = await post<{ reservationId: string; reference: string }>(
+        '/api/public/checkout/guest',
+        {
+          holdId: hold.holdId,
+          checkoutToken: hold.checkoutToken,
+          contact: { firstName, lastName, email, phone },
+        },
+      );
       setReservationId(result.reservationId);
+      setReservationReference(result.reference);
       setStep('PAYMENT');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudieron guardar tus datos.');
@@ -194,7 +286,7 @@ export function BookingForm({
     }
   }
   async function initiatePayment() {
-    if (!hold || !reservationId) return;
+    if (!hold || !reservationId || expired || paymentInProgress) return;
     setBusy(true);
     setError('');
     try {
@@ -289,7 +381,29 @@ export function BookingForm({
                 ? 'Usaremos esta información para confirmar y administrar tu reserva.'
                 : 'El pago se realiza en el sitio seguro de Mercado Pago.'}
           </p>
-          {hold && (
+          {restoring && (
+            <p role="status" className="mt-4 text-sm text-muted">
+              Buscando una reserva en curso…
+            </p>
+          )}
+          {notice && (
+            <p role="status" className="mt-4 text-sm leading-6">
+              {notice}
+            </p>
+          )}
+          {reservationReference && (
+            <p className="mt-4 flex flex-wrap items-center gap-3 text-xs">
+              <strong>{reservationReference}</strong>
+              <span className="status-pill status-pill--pending">Por Confirmar</span>
+            </p>
+          )}
+          {paymentInProgress && (
+            <p role="status" className="mt-4 text-sm leading-6">
+              Estamos verificando tu pago. Tu reserva conserva la disponibilidad mientras
+              comprobamos el resultado.
+            </p>
+          )}
+          {hold && !paymentInProgress && (
             <p className="mt-4 rounded-lg bg-[#ebf1eb] p-3 text-xs text-ink" aria-live="polite">
               {seconds > 0
                 ? `Cotización protegida por ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')} minutos.`
@@ -299,6 +413,11 @@ export function BookingForm({
           {error && (
             <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-xs text-red-800">
               {error}
+              {error.includes('reserva pendiente') && (
+                <Link href="/mis-reservas" className="mt-2 block font-semibold underline">
+                  Recuperar mi reserva
+                </Link>
+              )}
             </p>
           )}
           {step === 'DATES' && (
@@ -510,7 +629,7 @@ export function BookingForm({
                 .
               </p>
               <button
-                disabled={busy || expired}
+                disabled={blocked}
                 type="submit"
                 className="primary-button hidden w-full uppercase md:inline-flex"
               >
@@ -555,7 +674,7 @@ export function BookingForm({
               </p>
               <button
                 type="button"
-                disabled={busy}
+                disabled={blocked}
                 onClick={() => void initiatePayment()}
                 className="primary-button hidden w-full uppercase md:inline-flex"
               >
@@ -636,7 +755,7 @@ export function BookingForm({
                     ? 'booking-contact-form'
                     : undefined
               }
-              disabled={busy || expired || (step === 'DATES' && !unitId)}
+              disabled={blocked || (step === 'DATES' && !unitId)}
               onClick={step === 'PAYMENT' ? next : undefined}
               className="primary-button mt-6 w-full uppercase"
             >

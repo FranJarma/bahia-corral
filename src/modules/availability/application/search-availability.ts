@@ -5,6 +5,7 @@ import {
   runTenantTx,
   type TenantContext,
 } from '@/infrastructure/db/tenant-transaction';
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 import { stayDates } from '@/modules/pricing/domain/pricing-engine';
 
 export type AvailableUnit = {
@@ -22,6 +23,7 @@ export async function searchAvailability(
   stayDates(input.checkin, input.checkout);
   if (!Number.isInteger(input.guests) || input.guests < 1)
     throw new Error('Cantidad de huéspedes inválida');
+  await releaseExpiredHolds(ctx);
   return runTenantTx(ctx, async (tx) =>
     resultRows<AvailableUnit>(
       await tx.execute(sql`

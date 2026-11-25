@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { PUBLIC_UNITS } from '@/modules/accommodations/domain/seed-units';
 import { getGuestReservation } from '@/modules/guests/application/reservation-otp';
 import { OtpAccess } from '@/modules/guests/ui/otp-access';
+import { reservationStatusLabel } from '@/modules/reservations/ui/reservation-format';
 import { PublicPage } from '@/modules/shared-ui/public-page';
 
 export const metadata: Metadata = { title: 'Mis reservas' };
@@ -67,7 +68,7 @@ export default async function MyReservationsPage({
                 </p>
                 <p className="flex items-center gap-2">
                   <Users size={17} />
-                  Estado: {reservation.status}
+                  Estado: {reservationStatusLabel(reservation.status)}
                 </p>
                 <p className="flex items-center gap-2">
                   <CreditCard size={17} />

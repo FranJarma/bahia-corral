@@ -8,7 +8,7 @@ async function main() {
   if (!connectionString) throw new Error('DATABASE_MIGRATION_URL requerido para migraciones');
   const client = postgres(connectionString, { max: 1, prepare: false });
   try {
-    const migrations = ['0001-initial.sql', '0002-username-login.sql'];
+    const migrations = ['0001-initial.sql', '0002-username-login.sql', '0003-guest-identity.sql'];
     for (const filename of migrations) {
       const raw = readFileSync(resolve(process.cwd(), 'drizzle', filename), 'utf8');
       await client.unsafe(raw);
