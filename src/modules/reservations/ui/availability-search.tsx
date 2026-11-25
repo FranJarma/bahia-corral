@@ -70,7 +70,12 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
         >
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[10px] font-semibold text-muted">Llegada <span aria-hidden="true" className="text-red-600">*</span></span>
+            <span className="text-[10px] font-semibold text-muted">
+              Llegada{' '}
+              <span aria-hidden="true" className="text-red-600">
+                *
+              </span>
+            </span>
             <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">
               {formatDate(checkin)}
             </span>
@@ -102,7 +107,12 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
         >
           <CalendarDays className="shrink-0" size={17} aria-hidden="true" />
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[10px] font-semibold text-muted">Salida <span aria-hidden="true" className="text-red-600">*</span></span>
+            <span className="text-[10px] font-semibold text-muted">
+              Salida{' '}
+              <span aria-hidden="true" className="text-red-600">
+                *
+              </span>
+            </span>
             <span className="whitespace-nowrap text-[13px] font-medium leading-[18px]">
               {formatDate(checkout)}
             </span>
