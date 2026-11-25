@@ -12,7 +12,6 @@ import {
 } from '@/infrastructure/http/route';
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
-
 import { validateRateBands } from '@/modules/pricing/domain/rate-bands';
 
 const band = z.object({
@@ -37,7 +36,7 @@ export async function PUT(request: NextRequest) {
           ),
         );
         if (!unit) throw new Error('Alojamiento inexistente');
-        const ordered = validateRateBands(unit.capacity_total,data.bands);
+        const ordered = validateRateBands(unit.capacity_total, data.bands);
         await tx.execute(
           sql`DELETE FROM base_rates WHERE tenant_id=${actor.tenantId} AND unit_id=${data.unitId}`,
         );

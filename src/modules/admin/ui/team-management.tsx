@@ -1,8 +1,8 @@
 'use client';
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ROLE_LABELS } from '@/modules/identity-access/ui/role-label';
+import { useState } from 'react';
 
+import { ROLE_LABELS } from '@/modules/identity-access/ui/role-label';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export type MemberSummary = {

@@ -1,9 +1,10 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import { SearchField } from '@/modules/shared-ui/search-field';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { useMemo, useState } from 'react';
+
+import { SearchField } from '@/modules/shared-ui/search-field';
 
 type Row = Record<string, string>;
 type Column = { key: string; label: string; weight?: 'bold'; badge?: boolean };
@@ -40,8 +41,15 @@ export function AdminRecordsTable({
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <SearchField className="w-full max-w-[420px]" value={query} placeholder={searchPlaceholder}
-          onChange={value => { setQuery(value); setPage(0); }} />
+        <SearchField
+          className="w-full max-w-[420px]"
+          value={query}
+          placeholder={searchPlaceholder}
+          onChange={(value) => {
+            setQuery(value);
+            setPage(0);
+          }}
+        />
         <span className="pb-2 text-[11px] text-muted">{matches.length} registros</span>
       </div>
       <div className="overflow-x-auto rounded-2xl bg-cream-soft">

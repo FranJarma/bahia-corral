@@ -161,40 +161,44 @@ for (const width of [1280, 390]) {
       expect(a!.x + a!.width <= b!.x || a!.y + a!.height <= b!.y).toBeTruthy();
       await page.screenshot({ path: info.outputPath('configuracion.png'), fullPage: true });
     });
-    test('alta de alojamiento y seguimiento de eventos desde sus modales',async({page},info)=>{
-      const name='Cabaña UI '+randomUUID().slice(0,8);
+    test('alta de alojamiento y seguimiento de eventos desde sus modales', async ({
+      page,
+    }, info) => {
+      const name = 'Cabaña UI ' + randomUUID().slice(0, 8);
       await page.goto('/admin/cabanas');
-      await page.getByRole('button',{name:'Nuevo alojamiento',exact:true}).click();
-      const unit=page.getByRole('dialog',{name:'Nuevo alojamiento',exact:true});
-      await unit.getByLabel('Nombre',{exact:false}).fill(name);
-      await unit.getByLabel('Código',{exact:false}).fill('UI-'+randomUUID().slice(0,8));
-      await unit.getByLabel('Tarifa 1 (ARS por noche)',{exact:false}).fill('95000.50');
-      await page.screenshot({path:info.outputPath('nuevo-alojamiento.png'),fullPage:true});
-      await unit.getByRole('button',{name:'Guardar alojamiento',exact:true}).click();
+      await page.getByRole('button', { name: 'Nuevo alojamiento', exact: true }).click();
+      const unit = page.getByRole('dialog', { name: 'Nuevo alojamiento', exact: true });
+      await unit.getByLabel('Nombre', { exact: false }).fill(name);
+      await unit.getByLabel('Código', { exact: false }).fill('UI-' + randomUUID().slice(0, 8));
+      await unit.getByLabel('Tarifa 1 (ARS por noche)', { exact: false }).fill('95000.50');
+      await page.screenshot({ path: info.outputPath('nuevo-alojamiento.png'), fullPage: true });
+      await unit.getByRole('button', { name: 'Guardar alojamiento', exact: true }).click();
       await expect(unit).not.toBeVisible();
-      await page.getByRole('searchbox',{name:'Buscar',exact:true}).fill(name);
-      await expect(page.getByRole('cell',{name,exact:true})).toBeVisible();
+      await page.getByRole('searchbox', { name: 'Buscar', exact: true }).fill(name);
+      await expect(page.getByRole('cell', { name, exact: true })).toBeVisible();
       await page.goto('/admin/eventos');
-      await page.getByRole('button',{name:'Nueva consulta de evento',exact:true}).click();
-      const event=page.getByRole('dialog',{name:'Nueva consulta de evento',exact:true});
-      const contact='Contacto '+width+' '+randomUUID().slice(0,8);
-      await event.getByLabel('Nombre de contacto',{exact:false}).fill(contact);
-      await event.getByLabel('Correo electrónico',{exact:false}).fill('contact@example.com');
-      await event.getByLabel('Teléfono',{exact:false}).fill('3870000000');
-      await event.getByLabel('Tipo de evento',{exact:false}).fill('Reunión');
-      await event.getByLabel('Cantidad de personas',{exact:false}).fill('12');
-      await event.getByRole('button',{name:'Crear consulta',exact:true}).click();
+      await page.getByRole('button', { name: 'Nueva consulta de evento', exact: true }).click();
+      const event = page.getByRole('dialog', { name: 'Nueva consulta de evento', exact: true });
+      const contact = 'Contacto ' + width + ' ' + randomUUID().slice(0, 8);
+      await event.getByLabel('Nombre de contacto', { exact: false }).fill(contact);
+      await event.getByLabel('Correo electrónico', { exact: false }).fill('contact@example.com');
+      await event.getByLabel('Teléfono', { exact: false }).fill('3870000000');
+      await event.getByLabel('Tipo de evento', { exact: false }).fill('Reunión');
+      await event.getByLabel('Cantidad de personas', { exact: false }).fill('12');
+      await event.getByRole('button', { name: 'Crear consulta', exact: true }).click();
       await expect(event).not.toBeVisible();
-      await page.getByRole('searchbox',{name:'Buscar',exact:true}).fill(contact);
-      await page.getByRole('button',{name:'Editar '+contact,exact:true}).click();
-      const edit=page.getByRole('dialog',{name:'Editar consulta de evento',exact:true});
-      await edit.getByLabel('Estado',{exact:true}).selectOption('CONTACTED');
-      await edit.getByLabel('Observaciones',{exact:true}).fill('Se contactó a la persona.');
-      await page.screenshot({path:info.outputPath('editar-evento.png'),fullPage:true});
-      await edit.getByRole('button',{name:'Guardar cambios',exact:true}).click();
+      await page.getByRole('searchbox', { name: 'Buscar', exact: true }).fill(contact);
+      await page.getByRole('button', { name: 'Editar ' + contact, exact: true }).click();
+      const edit = page.getByRole('dialog', { name: 'Editar consulta de evento', exact: true });
+      await edit.getByLabel('Estado', { exact: true }).selectOption('CONTACTED');
+      await edit.getByLabel('Observaciones', { exact: true }).fill('Se contactó a la persona.');
+      await page.screenshot({ path: info.outputPath('editar-evento.png'), fullPage: true });
+      await edit.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
       await expect(edit).not.toBeVisible();
-      await expect(page.getByRole('cell',{name:'Contactada',exact:true})).toBeVisible();
-      expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+      await expect(page.getByRole('cell', { name: 'Contactada', exact: true })).toBeVisible();
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      ).toBeTruthy();
     });
     test('reserva en modal, selector de pagos y calendario', async ({ page }, info) => {
       const unit = await createUnit(page.request);
@@ -208,7 +212,7 @@ for (const width of [1280, 390]) {
       await d.getByLabel('Nombre', { exact: false }).fill('Reserva');
       await d.getByLabel('Apellido', { exact: false }).fill('Modal ' + width);
       await d.getByLabel('Teléfono', { exact: false }).fill('3870000000');
-      await page.screenshot({path:info.outputPath('nueva-reserva.png'),fullPage:true});
+      await page.screenshot({ path: info.outputPath('nueva-reserva.png'), fullPage: true });
       await d.getByRole('button', { name: 'Crear reserva', exact: true }).click();
       await expect(d).not.toBeVisible();
       await expect(page).toHaveURL(/\/admin\/reservas$/);

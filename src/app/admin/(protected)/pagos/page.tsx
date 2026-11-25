@@ -25,7 +25,11 @@ export default async function PaymentsPage() {
         ),
       ),
   );
-  const reservations = await listReservations({tenantId:actor.tenantId,actorId:actor.userId,actorType:'USER'});
+  const reservations = await listReservations({
+    tenantId: actor.tenantId,
+    actorId: actor.userId,
+    actorType: 'USER',
+  });
   const mapped = rows.map((row) => ({
     id: row.id,
     reservation: row.reference,

@@ -19,9 +19,7 @@ export default async function AdminReservationsPage() {
       <PageHeading
         title="Gestión de reservas"
         subtitle="Consultá, filtrá y gestioná las reservas del complejo."
-        action={
-          <NewReservationDialog />
-        }
+        action={<NewReservationDialog />}
       />
       <ReservationsTable rows={rows} />
     </>

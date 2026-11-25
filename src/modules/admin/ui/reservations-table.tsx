@@ -1,11 +1,11 @@
 'use client';
 
 import { ChevronDown } from 'lucide-react';
-import { SearchField } from '@/modules/shared-ui/search-field';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
+import { SearchField } from '@/modules/shared-ui/search-field';
 
 const statuses: Record<string, string> = {
   CONFIRMED: 'Confirmada',
@@ -72,8 +72,12 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
         </button>
       </div>
       <div className="mb-4 grid gap-3 md:grid-cols-[minmax(220px,1.8fr)_1fr_1fr] xl:grid-cols-[minmax(280px,1.8fr)_1fr_1fr_1fr]">
-        <SearchField label="Buscar reserva" value={query} placeholder="Reserva, huésped o alojamiento"
-          onChange={value => filter(() => setQuery(value))} />
+        <SearchField
+          label="Buscar reserva"
+          value={query}
+          placeholder="Reserva, huésped o alojamiento"
+          onChange={(value) => filter(() => setQuery(value))}
+        />
         <label className="public-form-label">
           Estado
           <select value={status} onChange={(e) => filter(() => setStatus(e.target.value))}>
