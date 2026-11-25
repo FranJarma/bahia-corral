@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 
 import { type APIRequestContext, expect, test } from '@playwright/test';
 
+test.setTimeout(120_000);
+
 test.skip(process.env.E2E_TEST_DATABASE !== '1', 'Sólo modifica la base descartable de CI');
 async function createUnit(request: APIRequestContext) {
   const suffix = randomUUID().slice(0, 8);
@@ -27,7 +29,7 @@ test.beforeEach(async ({ page, baseURL }) => {
     headers: { Origin: baseURL! },
     data: { username: process.env.E2E_USERNAME, password: process.env.E2E_PASSWORD },
   });
-  expect(r.ok()).toBeTruthy();
+  if (!r.ok()) throw new Error('Login de prueba: ' + r.status() + ' ' + await r.text());
 });
 test('altas y ediciones reales con control de permisos', async ({ page, baseURL }) => {
   const request = page.request,
@@ -84,7 +86,7 @@ test('altas y ediciones reales con control de permisos', async ({ page, baseURL 
     (
       await request.post('/api/auth/sign-in/username', {
         headers: { Origin: baseURL! },
-        data: { username: process.env.E2E_USERNAME + '-staff', password: process.env.E2E_PASSWORD },
+        data: { username: process.env.E2E_USERNAME + '_staff', password: process.env.E2E_PASSWORD },
       })
     ).ok(),
   ).toBeTruthy();

@@ -66,7 +66,7 @@ jobs:
           POSTGRES_DB: bahia_e2e
         ports: ['5432:5432']
         options: >-
-          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/bahia_e2e
       DATABASE_MIGRATION_URL: postgresql://postgres:postgres@127.0.0.1:5432/bahia_e2e
@@ -75,7 +75,7 @@ jobs:
       NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
       BAHIA_DEFAULT_TENANT_SLUG: bahia-corral
       E2E_TEST_DATABASE: '1'
-      E2E_USERNAME: e2e-admin
+      E2E_USERNAME: e2e_admin
       E2E_PASSWORD: E2e-only-test-password-42
     steps:
       - uses: actions/checkout@v4
