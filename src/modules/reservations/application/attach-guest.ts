@@ -10,7 +10,7 @@ import {
 } from '@/infrastructure/db/tenant-transaction';
 import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 import { resolveGuest } from '@/modules/guests/application/resolve-guest';
-import type { GuestContact } from '@/modules/guests/domain/guest-contact';
+import { type GuestContact, normalizeGuestContact } from '@/modules/guests/domain/guest-contact';
 export type { GuestContact } from '@/modules/guests/domain/guest-contact';
 export type ReservationOrigin = 'WEB' | 'PHONE' | 'WHATSAPP' | 'FRONT_DESK';
 export type AttachGuestInput = {
@@ -113,7 +113,7 @@ export async function attachGuestToHold(
       VALUES(${reservationId},${ctx.tenantId},${reference},${hold.unit_id},${guestId},${hold.quote_id},${quote.checkin}::date,${quote.checkout}::date,
         ${quote.adults},${sql.param(quote.child_ages)}::integer[],${input.origin},${input.balanceDuePolicy ?? tenant.balance_due_policy},${quote.terms_version})`);
     await tx.execute(
-      sql`UPDATE reservation_holds SET reservation_id=${reservationId} WHERE tenant_id=${ctx.tenantId} AND id=${input.holdId}`,
+      sql`UPDATE reservation_holds SET reservation_id=${reservationId}, contact_snapshot=${JSON.stringify({ firstName: normalizeGuestContact(input.contact).firstName, lastName: normalizeGuestContact(input.contact).lastName, email: input.contact.email?.trim().toLowerCase() ?? '', phone: input.contact.phone.trim() })}::jsonb WHERE tenant_id=${ctx.tenantId} AND id=${input.holdId}`,
     );
     return { reservationId, reference };
   });

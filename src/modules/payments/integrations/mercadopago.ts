@@ -24,7 +24,10 @@ export type PaymentGateway = {
 
 function providerToken() {
   const token = process.env.MERCADO_PAGO_ACCESS_TOKEN;
-  if (!token) throw new Error('Mercado Pago sin credenciales en este ambiente');
+  if (!token)
+    throw new Error(
+      'El pago con Mercado Pago todavía no está disponible. Contactá al complejo para continuar.',
+    );
   return token;
 }
 async function providerFetch(path: string, options?: RequestInit) {

@@ -59,6 +59,7 @@ beforeAll(async () => {
   }
   await db.unsafe(readFileSync(resolve('drizzle/0003-guest-identity.sql'), 'utf8'));
   await db.unsafe(readFileSync(resolve('drizzle/0003-guest-identity.sql'), 'utf8'));
+  await db.unsafe(readFileSync(resolve('drizzle/0004-checkout-contact.sql'), 'utf8'));
   await db`CREATE ROLE checkout_runtime LOGIN PASSWORD 'test_checkout_password' NOSUPERUSER NOBYPASSRLS`;
   await db`GRANT USAGE ON SCHEMA public TO checkout_runtime`;
   await db`GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO checkout_runtime`;

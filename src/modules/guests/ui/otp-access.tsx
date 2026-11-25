@@ -22,13 +22,21 @@ export function OtpAccess() {
           body: JSON.stringify({ reference, email, ...(step === 'VERIFY' ? { code } : {}) }),
         },
       );
-      const data = (await response.json()) as { message?: string; error?: string };
+      const data = (await response.json()) as {
+        message?: string;
+        error?: string;
+        resumeCheckout?: boolean;
+      };
       if (!response.ok) throw new Error(data.error ?? 'No pudimos verificar el código');
       if (step === 'REQUEST') {
         setStep('VERIFY');
         setMessage(data.message ?? 'Revisá tu correo.');
       } else {
-        window.location.assign(`/mis-reservas?referencia=${encodeURIComponent(reference.trim())}`);
+        window.location.assign(
+          data.resumeCheckout
+            ? '/reservar'
+            : `/mis-reservas?referencia=${encodeURIComponent(reference.trim())}`,
+        );
       }
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No fue posible continuar');

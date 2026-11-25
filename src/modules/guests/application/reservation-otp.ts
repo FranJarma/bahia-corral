@@ -1,10 +1,14 @@
-import { createHmac, randomBytes, randomInt } from 'node:crypto';
+import 'server-only';
+
+import { createHash, createHmac, randomBytes, randomInt } from 'node:crypto';
 
 import { sql } from 'drizzle-orm';
 
+import { appendAuditEvent } from '@/infrastructure/audit/append-audit-event';
 import { getDefaultTenantId } from '@/infrastructure/db/get-tenant';
 import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
 import { sendMail } from '@/infrastructure/email/mail-port';
+import { releaseExpiredHolds } from '@/modules/availability/application/holds';
 
 function codeHash(code: string, challengeId: string) {
   const secret = process.env.BETTER_AUTH_SECRET;
@@ -21,6 +25,7 @@ export async function requestReservationOtp(reference: string, email: string): P
   const tenantId = await getDefaultTenantId();
   const cleanEmail = email.trim().toLowerCase();
   const ctx = { tenantId, actorId: 'guest-otp', actorType: 'SYSTEM' as const };
+  await releaseExpiredHolds(ctx);
   const challenge = await runTenantTx(ctx, async (tx) => {
     const records = resultRows<{ id: string }>(
       await tx.execute(sql`
@@ -112,5 +117,54 @@ export async function getGuestReservation(reference: string, token: string) {
       AND a.revoked_at IS NULL AND r.reference=${reference} LIMIT 1`),
     );
     return rows[0] ?? null;
+  });
+}
+
+/** Recuperación con el grant emitido después del OTP; nunca por coincidencia de email. */
+export async function recoverPendingCheckout(
+  reference: string,
+  accessToken: string,
+): Promise<string | null> {
+  const tenantId = await getDefaultTenantId();
+  const ctx = { tenantId, actorId: 'guest-otp', actorType: 'SYSTEM' as const };
+  await releaseExpiredHolds(ctx);
+  return runTenantTx(ctx, async (tx) => {
+    const [reservation] = resultRows<{
+      id: string;
+      first_name: string;
+      last_name: string;
+      email: string;
+      phone: string;
+    }>(
+      await tx.execute(sql`
+      SELECT r.id,g.first_name,g.last_name,g.email,g.phone FROM guest_access_grants a JOIN reservations r
+        ON r.tenant_id=a.tenant_id AND r.id=a.reservation_id
+        JOIN guests g ON g.tenant_id=r.tenant_id AND g.id=r.guest_id
+      WHERE a.tenant_id=${tenantId} AND a.token_hash=${grantHash(accessToken)}
+        AND a.expires_at>now() AND a.revoked_at IS NULL
+        AND r.reference=${reference} AND r.status='PENDING_CONFIRMATION'
+      FOR UPDATE OF r`),
+    );
+    if (!reservation) return null;
+    const [hold] = resultRows<{ id: string }>(
+      await tx.execute(sql`
+      SELECT id FROM reservation_holds WHERE tenant_id=${tenantId} AND reservation_id=${reservation.id}
+        AND (status IN ('VERIFYING','UNCERTAIN') OR (status='ACTIVE' AND expires_at>now()))
+      FOR UPDATE`),
+    );
+    if (!hold) return null;
+    const token = randomBytes(32).toString('base64url');
+    await tx.execute(sql`UPDATE reservation_holds
+      SET checkout_token_hash=${createHash('sha256').update(token).digest('hex')},
+        contact_snapshot=COALESCE(contact_snapshot,${JSON.stringify({ firstName: reservation.first_name, lastName: reservation.last_name, email: reservation.email ?? '', phone: reservation.phone })}::jsonb)
+      WHERE tenant_id=${tenantId} AND id=${hold.id}`);
+    await appendAuditEvent(tx, {
+      ...ctx,
+      entity: 'reservation',
+      entityId: reservation.id,
+      action: 'CHECKOUT_RECOVERED_WITH_OTP',
+      correlationId: hold.id,
+    });
+    return token;
   });
 }
