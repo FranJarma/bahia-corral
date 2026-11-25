@@ -159,12 +159,20 @@ export function AccommodationList() {
               <div className="min-w-0 px-5 py-4">
                 <p className="public-kicker !text-[9px]">{unit.label}</p>
                 <h2 className="editorial mt-1 text-[23px]">{unit.name}</h2>
-                <p data-accommodation-description className="mt-2 line-clamp-3 h-[60px] text-[11px] leading-5 text-muted">{unit.description}</p>
+                <p
+                  data-accommodation-description
+                  className="mt-2 line-clamp-3 h-[60px] text-[11px] leading-5 text-muted"
+                >
+                  {unit.description}
+                </p>
                 <p className="mt-4 flex items-center gap-1.5 text-[11px] text-muted">
                   <Users size={14} /> Hasta {unit.capacityTotal} huéspedes · Servicios del complejo
                 </p>
               </div>
-              <div data-accommodation-footer className="flex flex-col items-center justify-center gap-3 border-t border-[#eae0d4] px-4 py-4 sm:border-t-0 sm:border-l">
+              <div
+                data-accommodation-footer
+                className="flex flex-col items-center justify-center gap-3 border-t border-[#eae0d4] px-4 py-4 sm:border-t-0 sm:border-l"
+              >
                 <span className="text-xs text-muted">Desde</span>
                 <span className="editorial text-[22px]">{unit.fromPrice}</span>
                 <span className="text-[10px] text-muted">por noche</span>

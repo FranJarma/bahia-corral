@@ -108,22 +108,26 @@ export function NewReservationForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Ingreso
-          <DatePicker onValueChange={setCheckin}><input
-            required
-            type="date"
-            value={checkin}
-            onChange={(e) => setCheckin(e.target.value)}
-          /></DatePicker>
+          <DatePicker onValueChange={setCheckin}>
+            <input
+              required
+              type="date"
+              value={checkin}
+              onChange={(e) => setCheckin(e.target.value)}
+            />
+          </DatePicker>
         </ValidatedLabel>
         <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Salida
-          <DatePicker onValueChange={setCheckout}><input
-            required
-            min={checkin}
-            type="date"
-            value={checkout}
-            onChange={(e) => setCheckout(e.target.value)}
-          /></DatePicker>
+          <DatePicker onValueChange={setCheckout}>
+            <input
+              required
+              min={checkin}
+              type="date"
+              value={checkout}
+              onChange={(e) => setCheckout(e.target.value)}
+            />
+          </DatePicker>
         </ValidatedLabel>
       </div>
       <ValidatedLabel className="grid gap-2 text-sm font-semibold">

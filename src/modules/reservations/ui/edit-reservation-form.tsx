@@ -154,22 +154,26 @@ export function EditReservationForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <ValidatedLabel className="public-form-label">
             Ingreso
-            <DatePicker onValueChange={value => change('checkin',value)}><input
-              required
-              type="date"
-              value={draft.checkin}
-              onChange={(e) => change('checkin', e.target.value)}
-            /></DatePicker>
+            <DatePicker onValueChange={(value) => change('checkin', value)}>
+              <input
+                required
+                type="date"
+                value={draft.checkin}
+                onChange={(e) => change('checkin', e.target.value)}
+              />
+            </DatePicker>
           </ValidatedLabel>
           <ValidatedLabel className="public-form-label">
             Salida
-            <DatePicker onValueChange={value => change('checkout',value)}><input
-              required
-              type="date"
-              min={draft.checkin}
-              value={draft.checkout}
-              onChange={(e) => change('checkout', e.target.value)}
-            /></DatePicker>
+            <DatePicker onValueChange={(value) => change('checkout', value)}>
+              <input
+                required
+                type="date"
+                min={draft.checkin}
+                value={draft.checkout}
+                onChange={(e) => change('checkout', e.target.value)}
+              />
+            </DatePicker>
           </ValidatedLabel>
           <ValidatedLabel className="public-form-label">
             Adultos

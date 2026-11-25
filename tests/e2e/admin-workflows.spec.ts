@@ -241,14 +241,16 @@ for (const width of [1280, 390]) {
       await expect(editReservation.getByLabel('Ingreso', { exact: false })).toHaveValue(
         '2027-04-10',
       );
-      await editReservation.getByLabel('Ingreso',{exact:false}).click();
-      const calendar=page.getByRole('dialog',{name:'Elegir fecha',exact:true});
+      await editReservation.getByLabel('Ingreso', { exact: false }).click();
+      const calendar = page.getByRole('dialog', { name: 'Elegir fecha', exact: true });
       await expect(calendar).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(editReservation).toBeVisible();
-      await editReservation.getByLabel('Salida',{exact:false}).click();
-      await calendar.getByRole('button',{name:'lunes, 12 de abril de 2027',exact:true}).click();
-      await calendar.getByRole('button',{name:'Aplicar fecha',exact:true}).click();
+      await editReservation.getByLabel('Salida', { exact: false }).click();
+      await calendar
+        .getByRole('button', { name: 'lunes, 12 de abril de 2027', exact: true })
+        .click();
+      await calendar.getByRole('button', { name: 'Aplicar fecha', exact: true }).click();
       await expect(calendar).not.toBeVisible();
       await editReservation.getByLabel('Menores', { exact: false }).fill('2');
       await editReservation.getByLabel('Edad del menor 1', { exact: false }).fill('3');

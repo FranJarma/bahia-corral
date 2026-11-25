@@ -9,7 +9,7 @@ import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function EventInquiryForm() {
   const [busy, setBusy] = useState(false);
-  const [preferredDate,setPreferredDate]=useState('');
+  const [preferredDate, setPreferredDate] = useState('');
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -82,7 +82,14 @@ export function EventInquiryForm() {
           </ValidatedLabel>
           <label className="public-form-label">
             Fecha estimada
-            <DatePicker onValueChange={setPreferredDate}><input name="preferredDate" type="date" value={preferredDate} onChange={event=>setPreferredDate(event.target.value)} /></DatePicker>
+            <DatePicker onValueChange={setPreferredDate}>
+              <input
+                name="preferredDate"
+                type="date"
+                value={preferredDate}
+                onChange={(event) => setPreferredDate(event.target.value)}
+              />
+            </DatePicker>
           </label>
           <label className="public-form-label">
             Cantidad de personas

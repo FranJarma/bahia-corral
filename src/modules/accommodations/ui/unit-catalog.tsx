@@ -35,22 +35,29 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
           </Link>
           <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
             <h3 className="editorial text-[27px] leading-tight">{unit.name}</h3>
-            <p data-accommodation-description className="mt-2 line-clamp-3 h-[60px] text-[12px] leading-5 text-muted">{unit.description}</p>
+            <p
+              data-accommodation-description
+              className="mt-2 line-clamp-3 h-[60px] text-[12px] leading-5 text-muted"
+            >
+              {unit.description}
+            </p>
             <p className="mt-4 flex items-center gap-2 text-[11px] text-muted">
               <Users size={15} aria-hidden="true" /> Hasta {unit.capacityTotal} huéspedes
             </p>
-            <div data-accommodation-footer className="mt-auto pt-5"><div className="flex items-end justify-between gap-2 border-t border-[#e9e0d5] pt-4">
-              <p className="text-[12px] text-ink">
-                Desde <strong>{unit.fromPrice}</strong>
-                <span className="block pt-1 text-[10px] text-muted">por noche</span>
-              </p>
-              <Link
-                href={`/alojamientos/${unit.slug}`}
-                className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink hover:underline hover:underline-offset-4"
-              >
-                Ver detalle <ArrowRight size={14} />
-              </Link>
-            </div></div>
+            <div data-accommodation-footer className="mt-auto pt-5">
+              <div className="flex items-end justify-between gap-2 border-t border-[#e9e0d5] pt-4">
+                <p className="text-[12px] text-ink">
+                  Desde <strong>{unit.fromPrice}</strong>
+                  <span className="block pt-1 text-[10px] text-muted">por noche</span>
+                </p>
+                <Link
+                  href={`/alojamientos/${unit.slug}`}
+                  className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-ink hover:underline hover:underline-offset-4"
+                >
+                  Ver detalle <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
           </div>
         </article>
       ))}

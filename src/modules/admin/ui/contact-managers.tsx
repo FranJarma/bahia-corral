@@ -149,11 +149,35 @@ function ContactManager({
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map(field=>{
-              const control=<input type={field.type??'text'} required={field.required} min={field.type==='number'?1:undefined} minLength={field.type==='tel'?6:undefined} value={draft[field.key]??''} onChange={event=>setDraft(current=>({...current,[field.key]:event.target.value}))}/>;
-              return <ValidatedLabel key={field.key} className="public-form-label min-w-0">{field.label}
-                {field.type==='date'?<DatePicker onValueChange={value=>setDraft(current=>({...current,[field.key]:value}))}>{control}</DatePicker>:control}
-              </ValidatedLabel>;
+            {fields.map((field) => {
+              const control = (
+                <input
+                  type={field.type ?? 'text'}
+                  required={field.required}
+                  min={field.type === 'number' ? 1 : undefined}
+                  minLength={field.type === 'tel' ? 6 : undefined}
+                  value={draft[field.key] ?? ''}
+                  onChange={(event) =>
+                    setDraft((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
+                />
+              );
+              return (
+                <ValidatedLabel key={field.key} className="public-form-label min-w-0">
+                  {field.label}
+                  {field.type === 'date' ? (
+                    <DatePicker
+                      onValueChange={(value) =>
+                        setDraft((current) => ({ ...current, [field.key]: value }))
+                      }
+                    >
+                      {control}
+                    </DatePicker>
+                  ) : (
+                    control
+                  )}
+                </ValidatedLabel>
+              );
             })}
           </div>
           {!guests && (

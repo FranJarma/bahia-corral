@@ -40,12 +40,12 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
   const [guestOpen, setGuestOpen] = useState(false);
   const [error, setError] = useState('');
 
-  function changeCheckin(value:string) {
+  function changeCheckin(value: string) {
     setCheckin(value);
-    if(value && value>=checkout){
-      const date=new Date(value+'T12:00:00Z');
-      date.setUTCDate(date.getUTCDate()+1);
-      setCheckout(date.toISOString().slice(0,10));
+    if (value && value >= checkout) {
+      const date = new Date(value + 'T12:00:00Z');
+      date.setUTCDate(date.getUTCDate() + 1);
+      setCheckout(date.toISOString().slice(0, 10));
     }
   }
   function search() {
@@ -90,15 +90,17 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
               {formatDate(checkin)}
             </span>
           </span>
-          <DatePicker onValueChange={changeCheckin}><input
-            type="date"
-            required
-            aria-label="Llegada"
-            value={checkin}
-            min={today}
-            onChange={(event) => changeCheckin(event.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          /></DatePicker>
+          <DatePicker onValueChange={changeCheckin}>
+            <input
+              type="date"
+              required
+              aria-label="Llegada"
+              value={checkin}
+              min={today}
+              onChange={(event) => changeCheckin(event.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            />
+          </DatePicker>
           <ChevronDown size={13} aria-hidden="true" />
         </label>
         <span
@@ -120,15 +122,17 @@ export function AvailabilitySearch({ compact = false }: { compact?: boolean }) {
               {formatDate(checkout)}
             </span>
           </span>
-          <DatePicker onValueChange={setCheckout}><input
-            type="date"
-            required
-            aria-label="Salida"
-            value={checkout}
-            min={checkin}
-            onChange={(event) => setCheckout(event.target.value)}
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          /></DatePicker>
+          <DatePicker onValueChange={setCheckout}>
+            <input
+              type="date"
+              required
+              aria-label="Salida"
+              value={checkout}
+              min={checkin}
+              onChange={(event) => setCheckout(event.target.value)}
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            />
+          </DatePicker>
           <ChevronDown size={13} aria-hidden="true" />
         </label>
         <span

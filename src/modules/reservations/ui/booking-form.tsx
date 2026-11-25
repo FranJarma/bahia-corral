@@ -313,23 +313,27 @@ export function BookingForm({
               <div className="public-field-group">
                 <ValidatedLabel className="public-form-label">
                   Check-in
-                  <DatePicker onValueChange={setCheckin}><input
-                    required
-                    type="date"
-                    value={checkin}
-                    min={today}
-                    onChange={(event) => setCheckin(event.target.value)}
-                  /></DatePicker>
+                  <DatePicker onValueChange={setCheckin}>
+                    <input
+                      required
+                      type="date"
+                      value={checkin}
+                      min={today}
+                      onChange={(event) => setCheckin(event.target.value)}
+                    />
+                  </DatePicker>
                 </ValidatedLabel>
                 <ValidatedLabel className="public-form-label">
                   Check-out
-                  <DatePicker onValueChange={setCheckout}><input
-                    required
-                    type="date"
-                    value={checkout}
-                    min={checkin}
-                    onChange={(event) => setCheckout(event.target.value)}
-                  /></DatePicker>
+                  <DatePicker onValueChange={setCheckout}>
+                    <input
+                      required
+                      type="date"
+                      value={checkout}
+                      min={checkin}
+                      onChange={(event) => setCheckout(event.target.value)}
+                    />
+                  </DatePicker>
                 </ValidatedLabel>
               </div>
               <p role="status" aria-live="polite" className="text-xs text-muted">
