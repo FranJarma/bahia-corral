@@ -29,7 +29,7 @@ test.beforeEach(async ({ page, baseURL }) => {
     headers: { Origin: baseURL! },
     data: { username: process.env.E2E_USERNAME, password: process.env.E2E_PASSWORD },
   });
-  if (!r.ok()) throw new Error('Login de prueba: ' + r.status() + ' ' + await r.text());
+  if (!r.ok()) throw new Error('Login de prueba: ' + r.status() + ' ' + (await r.text()));
 });
 test('altas y ediciones reales con control de permisos', async ({ page, baseURL }) => {
   const request = page.request,
