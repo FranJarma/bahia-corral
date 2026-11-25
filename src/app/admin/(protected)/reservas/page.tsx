@@ -1,6 +1,4 @@
-import { ArrowRight } from 'lucide-react';
-import Link from 'next/link';
-
+import { NewReservationDialog } from '@/modules/admin/ui/new-reservation-dialog';
 import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { ReservationsTable } from '@/modules/admin/ui/reservations-table';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
@@ -22,9 +20,7 @@ export default async function AdminReservationsPage() {
         title="Gestión de reservas"
         subtitle="Consultá, filtrá y gestioná las reservas del complejo."
         action={
-          <Link href="/admin/reservas/nueva" className="primary-button">
-            Nueva reserva <ArrowRight size={16} />
-          </Link>
+          <NewReservationDialog />
         }
       />
       <ReservationsTable rows={rows} />

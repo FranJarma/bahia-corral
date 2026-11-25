@@ -13,6 +13,8 @@ import {
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 
+import { validateRateBands } from '@/modules/pricing/domain/rate-bands';
+
 const band = z.object({
   minGuests: z.number().int().min(1),
   maxGuests: z.number().int().min(1),
@@ -35,19 +37,7 @@ export async function PUT(request: NextRequest) {
           ),
         );
         if (!unit) throw new Error('Alojamiento inexistente');
-        const ordered = [...data.bands].sort((a, b) => a.minGuests - b.minGuests);
-        let expected = 1;
-        for (const b of ordered) {
-          if (
-            b.minGuests !== expected ||
-            b.maxGuests < b.minGuests ||
-            b.maxGuests > unit.capacity_total
-          )
-            throw new Error('Tarifas incompletas o superpuestas');
-          expected = b.maxGuests + 1;
-        }
-        if (expected !== unit.capacity_total + 1)
-          throw new Error('Deben cubrir toda la capacidad física');
+        const ordered = validateRateBands(unit.capacity_total,data.bands);
         await tx.execute(
           sql`DELETE FROM base_rates WHERE tenant_id=${actor.tenantId} AND unit_id=${data.unitId}`,
         );

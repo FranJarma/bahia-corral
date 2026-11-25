@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react';
 
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
-type Unit = { id: string; name: string; capacity_total: number };
-export function NewReservationForm() {
+type Unit = { id: string; name: string; capacity_total: number; published: boolean; operational_status: string };
+export function NewReservationForm({ onSuccess, onCancel }: { onSuccess: (reference: string) => void; onCancel: () => void }) {
   const [units, setUnits] = useState<Unit[]>([]);
   const [unitId, setUnitId] = useState('');
   const [checkin, setCheckin] = useState('');
@@ -19,15 +19,24 @@ export function NewReservationForm() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   useEffect(() => {
-    queueMicrotask(() => {
-      fetch('/api/admin/units')
-        .then((r) => r.json())
-        .then((v: { units: Unit[] }) => {
-          setUnits(v.units ?? []);
-          setUnitId(v.units?.[0]?.id ?? '');
-        })
-        .catch(() => setMessage('No se pudieron cargar los alojamientos'));
-    });
+    const controller = new AbortController();
+    fetch('/api/admin/units', { signal: controller.signal })
+      .then(async response => {
+        const data = await response.json() as { units?: Unit[]; error?: string };
+        if (!response.ok) throw new Error(data.error ?? 'No se pudieron cargar los alojamientos.');
+        return data.units ?? [];
+      })
+      .then(all => {
+        if (controller.signal.aborted) return;
+        const available = all.filter(unit => unit.published && unit.operational_status === 'ACTIVE');
+        setUnits(available);
+        setUnitId(available[0]?.id ?? '');
+        if (!available.length) setMessage('No hay alojamientos habilitados para recibir reservas.');
+      })
+      .catch(error => {
+        if (!controller.signal.aborted) setMessage(error instanceof Error ? error.message : 'No se pudieron cargar los alojamientos.');
+      });
+    return () => controller.abort();
   }, []);
   async function submit() {
     setBusy(true);
@@ -47,9 +56,10 @@ export function NewReservationForm() {
           reason,
         }),
       });
-      const d = (await r.json()) as { error?: string; reservationId?: string };
+      const d = (await r.json()) as { error?: string; reservationId?: string; reference?: string };
       if (!r.ok) throw new Error(d.error ?? 'No se pudo crear la reserva');
-      if (d.reservationId) window.location.assign(`/admin/reservas/${d.reservationId}`);
+      if (!d.reservationId) throw new Error('No se pudo comprobar la reserva. Consultá el listado antes de reintentar.');
+      onSuccess(d.reference ?? '');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : 'No pudo crearse');
     } finally {
@@ -58,7 +68,7 @@ export function NewReservationForm() {
   }
   return (
     <form
-      className="surface-card mx-auto grid max-w-[780px] gap-5 p-7"
+      className="admin-form"
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
@@ -101,7 +111,7 @@ export function NewReservationForm() {
           required
           type="number"
           min="1"
-          max="8"
+          max={units.find(unit => unit.id === unitId)?.capacity_total ?? 50}
           value={adults}
           onChange={(e) => setAdults(Number(e.target.value))}
         />
@@ -145,9 +155,12 @@ export function NewReservationForm() {
           {message}
         </p>
       )}
-      <button className="primary-button" disabled={busy || !unitId}>
-        {busy ? 'Registrando…' : 'Crear reserva'}
-      </button>
+      <div className="admin-form-actions">
+        <button type="button" className="secondary-button" disabled={busy} onClick={onCancel}>Cancelar</button>
+        <button className="primary-button" disabled={busy || !unitId}>
+          {busy ? 'Registrando…' : 'Crear reserva'}
+        </button>
+      </div>
     </form>
   );
 }

@@ -6,6 +6,7 @@ import { ManualPaymentForm } from '@/modules/admin/ui/manual-payment-form';
 import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
+import { listReservations } from '@/modules/reservations/application/list-reservations';
 export default async function PaymentsPage() {
   const actor = await requireAdminActor();
   requirePermission(actor.role, 'payments:read');
@@ -24,6 +25,7 @@ export default async function PaymentsPage() {
         ),
       ),
   );
+  const reservations = await listReservations({tenantId:actor.tenantId,actorId:actor.userId,actorType:'USER'});
   const mapped = rows.map((row) => ({
     id: row.id,
     reservation: row.reference,
@@ -42,7 +44,7 @@ export default async function PaymentsPage() {
         subtitle="Consultá ingresos registrados y asociá cobros manuales a las reservas."
       />
       <div className="mb-7">
-        <ManualPaymentForm />
+        <ManualPaymentForm reservations={reservations} />
       </div>
       <AdminRecordsTable
         rows={mapped}

@@ -1,32 +1,26 @@
-import { sql } from 'drizzle-orm';
-import { NextResponse } from 'next/server';
-
-import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
-import { failResponse, successJson } from '@/infrastructure/http/route';
+import { type NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+import { assertTrustedOrigin, failResponse, successJson } from '@/infrastructure/http/route';
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
-import { requirePermission } from '@/modules/identity-access/domain/permissions';
-export const dynamic = 'force-dynamic';
+import { listAdminGuests, saveGuest } from '@/modules/guests/application/manage-guests';
+export const dynamic='force-dynamic';
 export async function GET() {
   try {
-    const actor = await getAdminActor();
-    if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    requirePermission(actor.role, 'reservations:read');
-    const guests = await runTenantTx(
-      { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
-      async (tx) =>
-        resultRows<{
-          id: string;
-          first_name: string;
-          last_name: string;
-          email: string | null;
-          phone: string;
-        }>(
-          await tx.execute(sql`
-    SELECT id,first_name,last_name,email,phone FROM guests WHERE tenant_id=${actor.tenantId} ORDER BY created_at DESC LIMIT 200`),
-        ),
-    );
-    return successJson({ guests });
-  } catch (error) {
-    return failResponse(error);
-  }
+    const actor=await getAdminActor();
+    if(!actor)return NextResponse.json({error:'No autorizado'},{status:401});
+    return successJson({guests:await listAdminGuests(actor)});
+  }catch(error){return failResponse(error);}
 }
+async function save(request:NextRequest,editing:boolean) {
+  try {
+    assertTrustedOrigin(request);
+    const actor=await getAdminActor();
+    if(!actor)return NextResponse.json({error:'No autorizado'},{status:401});
+    const body=await request.json();
+    const id=editing?z.object({id:z.string().uuid()}).parse(body).id:undefined;
+    const guest=await saveGuest(actor,body,id);
+    return successJson({guest},editing?200:201);
+  }catch(error){return failResponse(error);}
+}
+export async function POST(request:NextRequest){return save(request,false);}
+export async function PATCH(request:NextRequest){return save(request,true);}

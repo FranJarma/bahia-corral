@@ -1,5 +1,7 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ROLE_LABELS } from '@/modules/identity-access/ui/role-label';
 
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
@@ -11,6 +13,7 @@ export type MemberSummary = {
 };
 
 export function TeamManagement({ members }: { members: MemberSummary[] }) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<'STAFF' | 'CLEANING'>('STAFF');
   const [message, setMessage] = useState('');
@@ -29,9 +32,10 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
       setMessage(
         action === 'POST'
           ? 'Invitación generada. Se enviará al correo indicado.'
-          : 'Acceso desactivado. Actualizá para ver los cambios.',
+          : 'Acceso desactivado.',
       );
       if (action === 'POST') setEmail('');
+      router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No fue posible continuar');
     } finally {
@@ -42,13 +46,14 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
     <section className="surface-card space-y-6 p-6">
       <h2 className="editorial text-2xl">Accesos del equipo</h2>
       <form
-        className="grid gap-4 md:grid-cols-[1fr_200px_auto] md:items-end"
+        aria-label="Invitar al equipo"
+        className="admin-invitation-form"
         onSubmit={(event) => {
           event.preventDefault();
           void call('POST', { email, role });
         }}
       >
-        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="public-form-label min-w-0">
           Correo de la persona
           <input
             type="email"
@@ -57,14 +62,14 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
             onChange={(event) => setEmail(event.target.value)}
           />
         </ValidatedLabel>
-        <label className="grid gap-2 text-sm font-semibold">
+        <label className="public-form-label min-w-0">
           Rol
           <select value={role} onChange={(event) => setRole(event.target.value as typeof role)}>
             <option value="STAFF">Personal administrativo</option>
             <option value="CLEANING">Limpieza</option>
           </select>
         </label>
-        <button className="primary-button" disabled={busy}>
+        <button className="primary-button admin-invitation-submit" disabled={busy}>
           Invitar
         </button>
       </form>
@@ -91,7 +96,7 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
             {members.map((member) => (
               <tr className="border-t border-[#e5e5de]" key={member.id}>
                 <td className="py-3">{member.email}</td>
-                <td>{member.role}</td>
+                <td>{ROLE_LABELS[member.role]}</td>
                 <td>{member.active ? 'Activo' : 'Inactivo'}</td>
                 <td className="text-right">
                   {member.active && member.role !== 'OWNER' && (

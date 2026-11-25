@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
+import { NewReservationDialog } from '@/modules/admin/ui/new-reservation-dialog';
 import { OccupancyWeek } from '@/modules/admin/ui/occupancy-week';
 import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
@@ -63,9 +64,7 @@ export default async function DashboardPage() {
         subtitle="La operación de Bahía Corral, en un solo lugar."
         action={
           <div className="flex flex-wrap gap-3">
-            <Link href="/admin/reservas/nueva" className="primary-button">
-              Nueva reserva <ArrowRight size={15} />
-            </Link>
+            <NewReservationDialog />
             <Link href="/admin/reservas" className="secondary-button">
               Ver reservas
             </Link>

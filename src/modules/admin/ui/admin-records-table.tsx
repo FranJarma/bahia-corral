@@ -1,6 +1,7 @@
 'use client';
 
-import { Search, X } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { SearchField } from '@/modules/shared-ui/search-field';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -13,6 +14,7 @@ export function AdminRecordsTable({
   searchPlaceholder = 'Buscar...',
   actionLabel,
   actionKey,
+  actions,
 }: {
   rows: Row[];
   columns: Column[];
@@ -20,6 +22,7 @@ export function AdminRecordsTable({
   searchPlaceholder?: string;
   actionLabel?: string;
   actionKey?: string;
+  actions?: (row: Row) => ReactNode;
 }) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
@@ -37,36 +40,8 @@ export function AdminRecordsTable({
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <label className="public-form-label w-full max-w-[390px]">
-          Buscar
-          <div className="relative">
-            <Search
-              size={17}
-              className="pointer-events-none absolute left-3 top-[14px] text-muted"
-            />
-            <input
-              className="w-full pl-10 pr-10"
-              placeholder={searchPlaceholder}
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPage(0);
-              }}
-            />
-            {query && (
-              <button
-                aria-label="Limpiar búsqueda"
-                onClick={() => {
-                  setQuery('');
-                  setPage(0);
-                }}
-                className="absolute right-2 top-1 flex h-10 w-10 items-center justify-center"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </label>
+        <SearchField className="w-full max-w-[420px]" value={query} placeholder={searchPlaceholder}
+          onChange={value => { setQuery(value); setPage(0); }} />
         <span className="pb-2 text-[11px] text-muted">{matches.length} registros</span>
       </div>
       <div className="overflow-x-auto rounded-2xl bg-cream-soft">
@@ -78,7 +53,7 @@ export function AdminRecordsTable({
                   {c.label}
                 </th>
               ))}
-              {actionKey && <th scope="col">Acciones</th>}
+              {(actionKey || actions) && <th scope="col">Acciones</th>}
             </tr>
           </thead>
           <tbody>
@@ -97,7 +72,8 @@ export function AdminRecordsTable({
                     )}
                   </td>
                 ))}
-                {actionKey && (
+                {actions && <td>{actions(row)}</td>}
+                {actionKey && !actions && (
                   <td>
                     <Link
                       href={row[actionKey] ?? '#'}

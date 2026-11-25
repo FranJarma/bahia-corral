@@ -1,6 +1,7 @@
 'use client';
 
-import { ChevronDown, Search, X } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { SearchField } from '@/modules/shared-ui/search-field';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
@@ -71,27 +72,8 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
         </button>
       </div>
       <div className="mb-4 grid gap-3 md:grid-cols-[minmax(220px,1.8fr)_1fr_1fr] xl:grid-cols-[minmax(280px,1.8fr)_1fr_1fr_1fr]">
-        <label className="public-form-label">
-          Buscar reserva
-          <div className="relative">
-            <Search size={17} className="pointer-events-none absolute left-3 top-3.5 text-muted" />
-            <input
-              className="w-full pl-10 pr-10"
-              placeholder="Reserva, huésped o alojamiento"
-              value={query}
-              onChange={(e) => filter(() => setQuery(e.target.value))}
-            />
-            {query && (
-              <button
-                onClick={() => filter(() => setQuery(''))}
-                aria-label="Limpiar búsqueda"
-                className="absolute right-2 top-1 flex h-10 w-10 items-center justify-center"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-        </label>
+        <SearchField label="Buscar reserva" value={query} placeholder="Reserva, huésped o alojamiento"
+          onChange={value => filter(() => setQuery(value))} />
         <label className="public-form-label">
           Estado
           <select value={status} onChange={(e) => filter(() => setStatus(e.target.value))}>

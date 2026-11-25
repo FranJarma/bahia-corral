@@ -1,61 +1,26 @@
-import { sql } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-
-import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
-import {
-  assertTrustedOrigin,
-  failResponse,
-  jsonInput,
-  successJson,
-} from '@/infrastructure/http/route';
+import { assertTrustedOrigin, failResponse, successJson } from '@/infrastructure/http/route';
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
-import { requirePermission } from '@/modules/identity-access/domain/permissions';
-export const dynamic = 'force-dynamic';
+import { listAdminInquiries, saveInquiry } from '@/modules/event-inquiries/application/manage-inquiries';
+export const dynamic='force-dynamic';
 export async function GET() {
   try {
-    const actor = await getAdminActor();
-    if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    requirePermission(actor.role, 'events:manage');
-    const events = await runTenantTx(
-      { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
-      async (tx) =>
-        resultRows<{
-          id: string;
-          contact_name: string;
-          email: string;
-          event_type: string;
-          status: string;
-        }>(
-          await tx.execute(sql`
-    SELECT id,contact_name,email,event_type,status FROM event_inquiries WHERE tenant_id=${actor.tenantId} ORDER BY created_at DESC LIMIT 100`),
-        ),
-    );
-    return successJson({ events });
-  } catch (error) {
-    return failResponse(error);
-  }
+    const actor=await getAdminActor();
+    if(!actor)return NextResponse.json({error:'No autorizado'},{status:401});
+    return successJson({events:await listAdminInquiries(actor)});
+  }catch(error){return failResponse(error);}
 }
-export async function PATCH(request: NextRequest) {
+async function save(request:NextRequest,editing:boolean) {
   try {
     assertTrustedOrigin(request);
-    const actor = await getAdminActor();
-    if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-    requirePermission(actor.role, 'events:manage');
-    const body = await jsonInput(
-      request,
-      z.object({ id: z.string().uuid(), status: z.enum(['NEW', 'CONTACTED', 'CLOSED']) }),
-    );
-    await runTenantTx(
-      { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
-      async (tx) => {
-        await tx.execute(
-          sql`UPDATE event_inquiries SET status=${body.status} WHERE tenant_id=${actor.tenantId} AND id=${body.id}`,
-        );
-      },
-    );
-    return successJson({ updated: true });
-  } catch (error) {
-    return failResponse(error);
-  }
+    const actor=await getAdminActor();
+    if(!actor)return NextResponse.json({error:'No autorizado'},{status:401});
+    const body=await request.json();
+    const id=editing?z.object({id:z.string().uuid()}).parse(body).id:undefined;
+    const event=await saveInquiry(actor,body,id);
+    return successJson({event},editing?200:201);
+  }catch(error){return failResponse(error);}
 }
+export async function POST(request:NextRequest){return save(request,false);}
+export async function PATCH(request:NextRequest){return save(request,true);}

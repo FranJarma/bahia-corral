@@ -10,7 +10,6 @@ import {
   Settings,
   Sparkles,
   Users,
-  Utensils,
   Wrench,
   X,
 } from 'lucide-react';
@@ -22,6 +21,8 @@ import { useEffect, useRef, useState } from 'react';
 import { LogoutButton } from '@/modules/admin/ui/logout-button';
 import type { AdminActor } from '@/modules/identity-access/application/admin-actor';
 
+import { ROLE_LABELS } from '@/modules/identity-access/ui/role-label';
+
 const links = [
   { href: '/admin', title: 'Inicio', Icon: Home, permission: 'all' },
   { href: '/admin/reservas', title: 'Reservas', Icon: ClipboardList, permission: 'general' },
@@ -32,7 +33,6 @@ const links = [
   { href: '/admin/recepcion', title: 'Recepción', Icon: CalendarDays, permission: 'general' },
   { href: '/admin/limpieza', title: 'Limpieza', Icon: Wrench, permission: 'all' },
   { href: '/admin/pagos', title: 'Pagos', Icon: ClipboardList, permission: 'general' },
-  { href: '/admin/tarifas', title: 'Tarifas', Icon: Utensils, permission: 'owner' },
   { href: '/admin/configuracion', title: 'Configuración', Icon: Settings, permission: 'owner' },
 ] as const;
 
@@ -112,7 +112,7 @@ export function AdminNavigation({ actor }: { actor: AdminActor }) {
         {!collapsed && (
           <>
             <p className="truncate text-[11px] font-semibold text-ink">{actor.email}</p>
-            <p className="mb-3 mt-1 text-[10px] text-muted">Bahía Corral · {actor.role}</p>
+            <p className="mb-3 mt-1 text-[10px] text-muted">Bahía Corral · {ROLE_LABELS[actor.role]}</p>
           </>
         )}
         <LogoutButton />
