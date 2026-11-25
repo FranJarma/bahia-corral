@@ -14,8 +14,20 @@ function date(value: string) {
   return value.slice(8, 10) + '/' + value.slice(5, 7) + '/' + value.slice(0, 4);
 }
 
-export function ManualPaymentForm({ reservations, initialReservationId='', lockReservation=false, embedded=false, onSaved, onCancel }: {
-  reservations:ReservationSummary[]; initialReservationId?:string; lockReservation?:boolean; embedded?:boolean; onSaved?:(message:string)=>void; onCancel?:()=>void;
+export function ManualPaymentForm({
+  reservations,
+  initialReservationId = '',
+  lockReservation = false,
+  embedded = false,
+  onSaved,
+  onCancel,
+}: {
+  reservations: ReservationSummary[];
+  initialReservationId?: string;
+  lockReservation?: boolean;
+  embedded?: boolean;
+  onSaved?: (message: string) => void;
+  onCancel?: () => void;
 }) {
   const router = useRouter();
   const [reservationId, setReservationId] = useState(initialReservationId);
@@ -60,7 +72,10 @@ export function ManualPaymentForm({ reservations, initialReservationId='', lockR
       setAmount('');
       setReference('');
       setReservationId('');
-      const successMessage=json.confirmation==='CONFLICT'?'Pago registrado. La reserva requiere revisión de disponibilidad.':'Pago registrado correctamente.';
+      const successMessage =
+        json.confirmation === 'CONFLICT'
+          ? 'Pago registrado. La reserva requiere revisión de disponibilidad.'
+          : 'Pago registrado correctamente.';
       setMessage(successMessage);
       onSaved?.(successMessage);
       router.refresh();
@@ -72,7 +87,7 @@ export function ManualPaymentForm({ reservations, initialReservationId='', lockR
   }
   return (
     <form
-      className={embedded ? "admin-form" : "surface-card admin-form p-6"}
+      className={embedded ? 'admin-form' : 'surface-card admin-form p-6'}
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
@@ -148,7 +163,11 @@ export function ManualPaymentForm({ reservations, initialReservationId='', lockR
         </p>
       )}
       <div className={embedded ? 'admin-form-actions' : 'flex'}>
-        {onCancel && <button type="button" className="secondary-button" disabled={busy} onClick={onCancel}>Cancelar</button>}
+        {onCancel && (
+          <button type="button" className="secondary-button" disabled={busy} onClick={onCancel}>
+            Cancelar
+          </button>
+        )}
         <button className="primary-button w-fit" disabled={busy || !eligible.length}>
           {busy ? 'Registrando…' : 'Registrar pago'}
         </button>

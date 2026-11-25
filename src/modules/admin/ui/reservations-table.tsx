@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { ManualPaymentForm } from '@/modules/admin/ui/manual-payment-form';
+import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
 import { EditReservationForm } from '@/modules/reservations/ui/edit-reservation-form';
 import { AdminDialog } from '@/modules/shared-ui/admin-dialog';
-import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
 import { SearchField } from '@/modules/shared-ui/search-field';
 
-const actionClassName='inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-xs font-semibold hover:bg-cream hover:underline disabled:cursor-not-allowed disabled:opacity-40';
+const actionClassName =
+  'inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg px-2 text-xs font-semibold hover:bg-cream hover:underline disabled:cursor-not-allowed disabled:opacity-40';
 const statuses: Record<string, string> = {
   CONFIRMED: 'Confirmada',
   PENDING_CONFIRMATION: 'Por confirmar',
@@ -38,10 +39,17 @@ function date(value: string) {
 }
 
 export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
-  const router=useRouter();
-  const [active,setActive]=useState<{mode:'edit'|'payment';reservation:ReservationSummary}|null>(null);
-  const [message,setMessage]=useState('');
-  function saved(text:string) {setActive(null);setMessage(text);router.refresh();}
+  const router = useRouter();
+  const [active, setActive] = useState<{
+    mode: 'edit' | 'payment';
+    reservation: ReservationSummary;
+  } | null>(null);
+  const [message, setMessage] = useState('');
+  function saved(text: string) {
+    setActive(null);
+    setMessage(text);
+    router.refresh();
+  }
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('ALL');
   const [unit, setUnit] = useState('ALL');
@@ -115,7 +123,11 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
           </select>
         </label>
       </div>
-      {message&&<p role="status" className="mb-4 text-sm text-positive">{message}</p>}
+      {message && (
+        <p role="status" className="mb-4 text-sm text-positive">
+          {message}
+        </p>
+      )}
       <div className="overflow-x-auto rounded-[12px] bg-cream-soft" data-reservations-scroll>
         <table className="admin-table min-w-[850px]">
           <thead>
@@ -138,8 +150,9 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
               const paid = BigInt(r.paid_cents),
                 total = BigInt(r.amount_cents),
                 isPending = r.status === 'PENDING_CONFIRMATION';
-              const canEdit=['CONFIRMED','IN_STAY'].includes(r.status);
-              const canPay=paid<total&&!['CANCELLED','COMPLETED','NO_SHOW'].includes(r.status);
+              const canEdit = ['CONFIRMED', 'IN_STAY'].includes(r.status);
+              const canPay =
+                paid < total && !['CANCELLED', 'COMPLETED', 'NO_SHOW'].includes(r.status);
               return (
                 <tr key={r.id}>
                   <td>
@@ -173,9 +186,43 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
                   </td>
                   <td>
                     <div className="flex items-center gap-1 whitespace-nowrap">
-                      <Link className={actionClassName} href={`/admin/reservas/${r.id}`}>Ver</Link>
-                      <button type="button" className={actionClassName} disabled={!canEdit} title={canEdit?'Editar la reserva':'La edición está disponible para reservas confirmadas o en estadía.'} onClick={()=>{setMessage('');setActive({mode:'edit',reservation:r});}}>Editar</button>
-                      <button type="button" className={actionClassName} disabled={!canPay} title={canPay?'Registrar un pago para esta reserva':paid>=total?'La reserva no tiene saldo pendiente.':'No se pueden registrar pagos en una reserva cerrada.'} onClick={()=>{setMessage('');setActive({mode:'payment',reservation:r});}}>Registrar Pago</button>
+                      <Link className={actionClassName} href={`/admin/reservas/${r.id}`}>
+                        Ver
+                      </Link>
+                      <button
+                        type="button"
+                        className={actionClassName}
+                        disabled={!canEdit}
+                        title={
+                          canEdit
+                            ? 'Editar la reserva'
+                            : 'La edición está disponible para reservas confirmadas o en estadía.'
+                        }
+                        onClick={() => {
+                          setMessage('');
+                          setActive({ mode: 'edit', reservation: r });
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        className={actionClassName}
+                        disabled={!canPay}
+                        title={
+                          canPay
+                            ? 'Registrar un pago para esta reserva'
+                            : paid >= total
+                              ? 'La reserva no tiene saldo pendiente.'
+                              : 'No se pueden registrar pagos en una reserva cerrada.'
+                        }
+                        onClick={() => {
+                          setMessage('');
+                          setActive({ mode: 'payment', reservation: r });
+                        }}
+                      >
+                        Registrar Pago
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -189,8 +236,42 @@ export function ReservationsTable({ rows }: { rows: ReservationSummary[] }) {
           </p>
         )}
       </div>
-      <AdminDialog open={active!==null} onOpenChange={open=>{if(!open)setActive(null);}} title={active?.mode==='edit'?'Editar reserva':'Registrar Pago'} description={active?active.reservation.reference+' · '+active.reservation.guest_name+' · '+active.reservation.unit_name:''}>
-        {active?.mode==='edit'?<EditReservationForm key={active.reservation.id} reservationId={active.reservation.id} onSaved={()=>saved('Reserva actualizada correctamente.')} onCancel={()=>setActive(null)}/>:active&&<ManualPaymentForm key={active.reservation.id} reservations={[active.reservation]} initialReservationId={active.reservation.id} lockReservation embedded onSaved={saved} onCancel={()=>setActive(null)}/>}
+      <AdminDialog
+        open={active !== null}
+        onOpenChange={(open) => {
+          if (!open) setActive(null);
+        }}
+        title={active?.mode === 'edit' ? 'Editar reserva' : 'Registrar Pago'}
+        description={
+          active
+            ? active.reservation.reference +
+              ' · ' +
+              active.reservation.guest_name +
+              ' · ' +
+              active.reservation.unit_name
+            : ''
+        }
+      >
+        {active?.mode === 'edit' ? (
+          <EditReservationForm
+            key={active.reservation.id}
+            reservationId={active.reservation.id}
+            onSaved={() => saved('Reserva actualizada correctamente.')}
+            onCancel={() => setActive(null)}
+          />
+        ) : (
+          active && (
+            <ManualPaymentForm
+              key={active.reservation.id}
+              reservations={[active.reservation]}
+              initialReservationId={active.reservation.id}
+              lockReservation
+              embedded
+              onSaved={saved}
+              onCancel={() => setActive(null)}
+            />
+          )
+        )}
       </AdminDialog>
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted">
         <span>
