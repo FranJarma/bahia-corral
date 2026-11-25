@@ -7,8 +7,14 @@ import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 import { listReservations } from '@/modules/reservations/application/list-reservations';
-const methodLabels: Record<string,string> = { TRANSFER:'Transferencia', CASH:'Efectivo', DEBIT:'Débito', CREDIT:'Crédito', MERCADO_PAGO:'Mercado Pago' };
-const channelLabels: Record<string,string> = { WEB:'Web', MANUAL:'Manual' };
+const methodLabels: Record<string, string> = {
+  TRANSFER: 'Transferencia',
+  CASH: 'Efectivo',
+  DEBIT: 'Débito',
+  CREDIT: 'Crédito',
+  MERCADO_PAGO: 'Mercado Pago',
+};
+const channelLabels: Record<string, string> = { WEB: 'Web', MANUAL: 'Manual' };
 export default async function PaymentsPage() {
   const actor = await requireAdminActor();
   requirePermission(actor.role, 'payments:read');
