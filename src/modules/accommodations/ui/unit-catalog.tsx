@@ -16,6 +16,7 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
       {PUBLIC_UNITS.map((unit) => (
         <article
           key={unit.code}
+          data-accommodation-card
           className={`surface-card flex flex-col overflow-hidden ${mobileCarousel ? 'w-[min(calc(100vw-48px),365px)] shrink-0 snap-center md:w-auto' : ''}`}
         >
           <Link href={`/alojamientos/${unit.slug}`} className="block">
@@ -34,11 +35,11 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
           </Link>
           <div className="flex flex-1 flex-col px-5 pt-5 pb-6">
             <h3 className="editorial text-[27px] leading-tight">{unit.name}</h3>
-            <p className="mt-2 min-h-[40px] text-[12px] leading-5 text-muted">{unit.description}</p>
+            <p data-accommodation-description className="mt-2 line-clamp-3 h-[60px] text-[12px] leading-5 text-muted">{unit.description}</p>
             <p className="mt-4 flex items-center gap-2 text-[11px] text-muted">
               <Users size={15} aria-hidden="true" /> Hasta {unit.capacityTotal} huéspedes
             </p>
-            <div className="mt-5 flex items-end justify-between gap-2 border-t border-[#e9e0d5] pt-4">
+            <div data-accommodation-footer className="mt-auto pt-5"><div className="flex items-end justify-between gap-2 border-t border-[#e9e0d5] pt-4">
               <p className="text-[12px] text-ink">
                 Desde <strong>{unit.fromPrice}</strong>
                 <span className="block pt-1 text-[10px] text-muted">por noche</span>
@@ -49,7 +50,7 @@ export function UnitCatalog({ mobileCarousel = false }: { mobileCarousel?: boole
               >
                 Ver detalle <ArrowRight size={14} />
               </Link>
-            </div>
+            </div></div>
           </div>
         </article>
       ))}

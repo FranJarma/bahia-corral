@@ -228,6 +228,7 @@ for (const width of [1280, 390]) {
       await expect(page.getByText('Más acciones', { exact: true })).toHaveCount(0);
       const tableBox = reservationRow.locator('xpath=ancestor::table/..');
       expect(await tableBox.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
+      await actions.scrollIntoViewIfNeeded();
       await page.screenshot({ path: info.outputPath('acciones-reserva.png'), fullPage: true });
       await actions.getByRole('link', { name: 'Ver', exact: true }).click();
       await expect(page).toHaveURL((url) => url.pathname === '/admin/reservas/' + reservation.id);
@@ -240,7 +241,15 @@ for (const width of [1280, 390]) {
       await expect(editReservation.getByLabel('Ingreso', { exact: false })).toHaveValue(
         '2027-04-10',
       );
-      await editReservation.getByLabel('Salida', { exact: false }).fill('2027-04-12');
+      await editReservation.getByLabel('Ingreso',{exact:false}).click();
+      const calendar=page.getByRole('dialog',{name:'Elegir fecha',exact:true});
+      await expect(calendar).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(editReservation).toBeVisible();
+      await editReservation.getByLabel('Salida',{exact:false}).click();
+      await calendar.getByRole('button',{name:'lunes, 12 de abril de 2027',exact:true}).click();
+      await calendar.getByRole('button',{name:'Aplicar fecha',exact:true}).click();
+      await expect(calendar).not.toBeVisible();
       await editReservation.getByLabel('Menores', { exact: false }).fill('2');
       await editReservation.getByLabel('Edad del menor 1', { exact: false }).fill('3');
       await editReservation.getByLabel('Edad del menor 2', { exact: false }).fill('7');

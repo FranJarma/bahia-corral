@@ -4,10 +4,12 @@ import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
 
+import { DatePicker } from '@/modules/shared-ui/date-picker';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 export function EventInquiryForm() {
   const [busy, setBusy] = useState(false);
+  const [preferredDate,setPreferredDate]=useState('');
   const [result, setResult] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -33,6 +35,7 @@ export function EventInquiryForm() {
         text: resultData.message ?? 'Recibimos tu consulta. Nos comunicaremos a la brevedad.',
       });
       formElement.reset();
+      setPreferredDate('');
     } catch (error) {
       setResult({
         type: 'error',
@@ -79,7 +82,7 @@ export function EventInquiryForm() {
           </ValidatedLabel>
           <label className="public-form-label">
             Fecha estimada
-            <input name="preferredDate" type="date" />
+            <DatePicker onValueChange={setPreferredDate}><input name="preferredDate" type="date" value={preferredDate} onChange={event=>setPreferredDate(event.target.value)} /></DatePicker>
           </label>
           <label className="public-form-label">
             Cantidad de personas

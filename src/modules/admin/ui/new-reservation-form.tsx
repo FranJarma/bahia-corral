@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 
+import { DatePicker } from '@/modules/shared-ui/date-picker';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 type Unit = {
@@ -107,22 +108,22 @@ export function NewReservationForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Ingreso
-          <input
+          <DatePicker onValueChange={setCheckin}><input
             required
             type="date"
             value={checkin}
             onChange={(e) => setCheckin(e.target.value)}
-          />
+          /></DatePicker>
         </ValidatedLabel>
         <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Salida
-          <input
+          <DatePicker onValueChange={setCheckout}><input
             required
             min={checkin}
             type="date"
             value={checkout}
             onChange={(e) => setCheckout(e.target.value)}
-          />
+          /></DatePicker>
         </ValidatedLabel>
       </div>
       <ValidatedLabel className="grid gap-2 text-sm font-semibold">

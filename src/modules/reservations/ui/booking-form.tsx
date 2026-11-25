@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { PUBLIC_UNITS } from '@/modules/accommodations/domain/seed-units';
+import { DatePicker } from '@/modules/shared-ui/date-picker';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 type Step = 'DATES' | 'CONTACT' | 'PAYMENT';
@@ -312,23 +313,23 @@ export function BookingForm({
               <div className="public-field-group">
                 <ValidatedLabel className="public-form-label">
                   Check-in
-                  <input
+                  <DatePicker onValueChange={setCheckin}><input
                     required
                     type="date"
                     value={checkin}
                     min={today}
                     onChange={(event) => setCheckin(event.target.value)}
-                  />
+                  /></DatePicker>
                 </ValidatedLabel>
                 <ValidatedLabel className="public-form-label">
                   Check-out
-                  <input
+                  <DatePicker onValueChange={setCheckout}><input
                     required
                     type="date"
                     value={checkout}
                     min={checkin}
                     onChange={(event) => setCheckout(event.target.value)}
-                  />
+                  /></DatePicker>
                 </ValidatedLabel>
               </div>
               <p role="status" aria-live="polite" className="text-xs text-muted">

@@ -6,6 +6,7 @@ import { AdminRecordsTable } from '@/modules/admin/ui/admin-records-table';
 import type { AdminInquiry } from '@/modules/event-inquiries/application/manage-inquiries';
 import type { AdminGuest } from '@/modules/guests/application/manage-guests';
 import { AdminDialog } from '@/modules/shared-ui/admin-dialog';
+import { DatePicker } from '@/modules/shared-ui/date-picker';
 import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 
 type RecordData = { id: string; [key: string]: string };
@@ -148,19 +149,12 @@ function ContactManager({
           }}
         >
           <div className="grid gap-4 sm:grid-cols-2">
-            {fields.map((field) => (
-              <ValidatedLabel key={field.key} className="public-form-label min-w-0">
-                {field.label}
-                <input
-                  type={field.type ?? 'text'}
-                  required={field.required}
-                  min={field.type === 'number' ? 1 : undefined}
-                  minLength={field.type === 'tel' ? 6 : undefined}
-                  value={draft[field.key] ?? ''}
-                  onChange={(e) => setDraft((v) => ({ ...v, [field.key]: e.target.value }))}
-                />
-              </ValidatedLabel>
-            ))}
+            {fields.map(field=>{
+              const control=<input type={field.type??'text'} required={field.required} min={field.type==='number'?1:undefined} minLength={field.type==='tel'?6:undefined} value={draft[field.key]??''} onChange={event=>setDraft(current=>({...current,[field.key]:event.target.value}))}/>;
+              return <ValidatedLabel key={field.key} className="public-form-label min-w-0">{field.label}
+                {field.type==='date'?<DatePicker onValueChange={value=>setDraft(current=>({...current,[field.key]:value}))}>{control}</DatePicker>:control}
+              </ValidatedLabel>;
+            })}
           </div>
           {!guests && (
             <>
