@@ -1,0 +1,37 @@
+name: Generate brand favicons
+
+on:
+  push:
+    branches:
+      - feat/mvp-36-tasks
+    paths:
+      - scripts/generate-favicons.py
+      - public/images/logo-bahia-corral.png
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  favicon-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'pillow==12.1.1'
+      - name: Create PNGs and ICO from approved logo
+        run: python scripts/generate-favicons.py
+      - name: Commit generated icons
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/favicon-16x16.png public/favicon-32x32.png public/apple-touch-icon.png
+          git add public/android-chrome-192x192.png public/android-chrome-512x512.png public/favicon.ico
+          if ! git diff --cached --quiet; then
+            git -c core.hooksPath=/dev/null commit -m 'assets: derive favicons from Figma logo [skip ci]'
+            git push origin HEAD:feat/mvp-36-tasks
+          fi
