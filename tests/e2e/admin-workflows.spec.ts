@@ -228,41 +228,7 @@ for (const width of [1280, 390]) {
       expect(await tableBox.evaluate(el => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
       await page.screenshot({path: info.outputPath('acciones-reserva.png'), fullPage:true});
       await actions.getByRole('link', {name:'Ver',exact:true}).click();
-      await expect(page).toHaveURL(new RegExp('/admin/reservas/'+reservation.id+'
-      await expect(page.getByPlaceholder('UUID de la reserva')).toHaveCount(0);
-      await page.getByLabel('Reserva', { exact: false }).selectOption(reservation.id);
-      await page.getByLabel('Importe recibido (ARS)', { exact: false }).fill('100');
-      await page.getByRole('button', { name: 'Registrar pago', exact: true }).click();
-      await expect(page.getByText('Pago registrado correctamente.', { exact: true })).toBeVisible();
-      await page.screenshot({ path: info.outputPath('pagos.png'), fullPage: true });
-      const today = new Date().toISOString().slice(0, 10),
-        tomorrow = new Date(Date.parse(today) + 86400000).toISOString().slice(0, 10);
-      expect(
-        (
-          await page.request.post('/api/admin/blocks', {
-            data: {
-              unitId: unit.id,
-              checkin: today,
-              checkout: tomorrow,
-              reason: 'Prueba de alineación',
-            },
-          })
-        ).status(),
-      ).toBe(201);
-      await page.goto('/admin/calendario');
-      const bar = page.locator('[data-unit-id="' + unit.id + '"] [data-calendar-entry]');
-      await expect(bar).toBeVisible();
-      const a = await page.locator('[data-calendar-date="' + today + '"]').boundingBox(),
-        b = await bar.boundingBox();
-      expect(a).not.toBeNull();
-      expect(b).not.toBeNull();
-      expect(Math.abs(b!.x - a!.x - 3)).toBeLessThan(2);
-      expect(Math.abs(b!.width - a!.width + 6)).toBeLessThan(2);
-      await page.screenshot({ path: info.outputPath('calendario.png'), fullPage: true });
-    });
-  });
-}
-));
+      await expect(page).toHaveURL(url=>url.pathname==='/admin/reservas/'+reservation.id);
       await expect(page.getByRole('heading',{name:'Reserva '+reservation.reference,exact:true})).toBeVisible();
       await page.goto('/admin/reservas');
       await actions.getByRole('button', {name:'Editar',exact:true}).click();
