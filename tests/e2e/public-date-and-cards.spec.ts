@@ -67,7 +67,10 @@ for (const width of [1440, 390]) {
       const cards = page.locator('[data-accommodation-card]');
       await expect(cards).toHaveCount(6);
       await page.evaluate(() => document.fonts.ready);
-      const firstWidth = await cards.first().evaluate(card => ({card:card.getBoundingClientRect().width,container:card.parentElement!.clientWidth}));
+      const firstWidth = await cards.first().evaluate((card) => ({
+        card: card.getBoundingClientRect().width,
+        container: card.parentElement!.clientWidth,
+      }));
       expect(firstWidth.card).toBeLessThanOrEqual(firstWidth.container + 1);
       const geometry = await cards.evaluateAll((elements) =>
         elements.map((card) => {
