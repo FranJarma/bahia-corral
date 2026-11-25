@@ -1,3 +1,5 @@
+import { createHmac, randomUUID } from 'node:crypto';
+import { NextRequest } from 'next/server';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -5,6 +7,8 @@ import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { POST as verifyGuestOtp } from '@/app/api/public/otp/verify/route';
+import { getCheckoutSession } from '@/modules/availability/application/checkout-session';
 import { getSqlClient } from '@/infrastructure/db/client';
 import { releaseExpiredHolds, startCheckout } from '@/modules/availability/application/holds';
 import { searchAvailability } from '@/modules/availability/application/search-availability';
@@ -287,4 +291,27 @@ it('la consolidación conserva las reservas y pagos existentes y es repetible', 
   const [audit] =
     await db`SELECT count(*)::int AS count FROM audit_events WHERE action='GUEST_CONSOLIDATED'`;
   expect(audit.count).toBe(1);
+});
+
+it('un OTP válido recupera sólo el checkout de esa reserva en otro dispositivo', async () => {
+  const secret = 'isolated-checkout-otp-secret-for-tests';
+  vi.stubEnv('BETTER_AUTH_SECRET', secret);
+  const hold = await checkoutAt('2027-06-17');
+  const reservation = await identify(hold, 'recover@example.com');
+  const id = randomUUID(), code = '123456';
+  const codeHash = createHmac('sha256', secret).update(id + ':' + code).digest('hex');
+  await db`INSERT INTO guest_otp_challenges(id,tenant_id,reservation_id,email,code_hash,expires_at)
+    VALUES(${id},${tenantId},${reservation.reservationId},'recover@example.com',${codeHash},now()+interval '5 minutes')`;
+  const response = await verifyGuestOtp(new NextRequest('http://localhost/api/public/otp/verify', {
+    method: 'POST', headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reference: reservation.reference, email: 'recover@example.com', code }),
+  }));
+  expect(response.status).toBe(200);
+  const token = response.cookies.get('bahia_checkout')?.value;
+  const session = await getCheckoutSession(checkoutContext(), token);
+  expect(session?.reservationId).toBe(reservation.reservationId);
+  expect(session?.expiresAt).toBe(hold.expiresAt);
+  expect(await getCheckoutSession(checkoutContext(), 'x'.repeat(43))).toBeNull();
+  // La credencial antigua queda invalidada tras la recuperación verificada.
+  expect(await getCheckoutSession(checkoutContext(), hold.checkoutToken)).toBeNull();
 });
