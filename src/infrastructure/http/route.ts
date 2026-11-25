@@ -14,6 +14,7 @@ export async function jsonInput<T>(
   return schema.parse(raw);
 }
 export function failResponse(error: unknown) {
+  const databaseError = error instanceof Error && error.message.startsWith('Failed query:');
   if (error instanceof ZodError)
     return NextResponse.json(
       {
@@ -22,7 +23,7 @@ export function failResponse(error: unknown) {
       },
       { status: 400 },
     );
-  if (error instanceof Error) {
+  if (error instanceof Error && !databaseError) {
     if (/(Origen|autorizado|permiso)/i.test(error.message))
       return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
     if (
@@ -33,7 +34,11 @@ export function failResponse(error: unknown) {
       return NextResponse.json({ error: error.message }, { status: 409 });
   }
   console.error('Fallo de operación', {
-    message: error instanceof Error ? error.message : 'unknown',
+    message: databaseError
+      ? 'Operación de base de datos fallida'
+      : error instanceof Error
+        ? error.message
+        : 'unknown',
   });
   return NextResponse.json(
     { error: 'No pudimos completar la operación. Intentá nuevamente.' },
