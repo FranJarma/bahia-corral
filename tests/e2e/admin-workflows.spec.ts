@@ -191,7 +191,7 @@ for (const width of [1280, 390]) {
       await page.getByRole('searchbox', { name: 'Buscar', exact: true }).fill(contact);
       await page.getByRole('button', { name: 'Editar ' + contact, exact: true }).click();
       const edit = page.getByRole('dialog', { name: 'Editar consulta de evento', exact: true });
-      await edit.getByLabel('Estado', { exact: true }).selectOption('CONTACTED');
+      await edit.getByRole('combobox', { name: 'Estado', exact: true }).selectOption('CONTACTED');
       await edit.getByLabel('Observaciones', { exact: true }).fill('Se contactó a la persona.');
       await page.screenshot({ path: info.outputPath('editar-evento.png'), fullPage: true });
       await edit.getByRole('button', { name: 'Guardar cambios', exact: true }).click();
