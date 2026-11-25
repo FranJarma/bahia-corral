@@ -47,7 +47,7 @@ function BandsEditor({
       {bands.map((band, i) => (
         <div key={i} className="grid items-end gap-3 sm:grid-cols-[80px_80px_minmax(0,1fr)_44px]">
           <ValidatedLabel className="public-form-label">
-            Desde (tramo {i + 1})
+            Desde
             <input
               required
               type="number"
@@ -58,7 +58,7 @@ function BandsEditor({
             />
           </ValidatedLabel>
           <ValidatedLabel className="public-form-label">
-            Hasta (tramo {i + 1})
+            Hasta
             <input
               required
               type="number"

@@ -7,6 +7,8 @@ import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 import { listReservations } from '@/modules/reservations/application/list-reservations';
+const methodLabels: Record<string,string> = { TRANSFER:'Transferencia', CASH:'Efectivo', DEBIT:'Débito', CREDIT:'Crédito', MERCADO_PAGO:'Mercado Pago' };
+const channelLabels: Record<string,string> = { WEB:'Web', MANUAL:'Manual' };
 export default async function PaymentsPage() {
   const actor = await requireAdminActor();
   requirePermission(actor.role, 'payments:read');
@@ -33,8 +35,8 @@ export default async function PaymentsPage() {
   const mapped = rows.map((row) => ({
     id: row.id,
     reservation: row.reference,
-    method: row.method,
-    channel: row.channel,
+    method: methodLabels[row.method] ?? 'Otro medio',
+    channel: channelLabels[row.channel] ?? row.channel,
     amount: new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS',
