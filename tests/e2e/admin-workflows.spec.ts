@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { type APIRequestContext, expect, test } from '@playwright/test';
 
 test.setTimeout(120_000);
+test.use({ actionTimeout: 15_000, navigationTimeout: 30_000 });
 
 test.skip(process.env.E2E_TEST_DATABASE !== '1', 'Sólo modifica la base descartable de CI');
 async function createUnit(request: APIRequestContext) {
@@ -20,7 +21,7 @@ async function createUnit(request: APIRequestContext) {
     bands: [{ minGuests: 1, maxGuests: 4, amountCents: '12000000' }],
   };
   const r = await request.post('/api/admin/units', { data: body });
-  expect(r.status()).toBe(201);
+  expect(r.status(), await r.text()).toBe(201);
   return { ...body, id: (await r.json()).unit.id as string };
 }
 test.beforeEach(async ({ page, baseURL }) => {
