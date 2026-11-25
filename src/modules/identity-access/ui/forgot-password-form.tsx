@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import Link from 'next/link';
 import { type FormEvent, useState } from 'react';
 
@@ -48,7 +49,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form className="mt-8 grid gap-5" onSubmit={submit}>
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Correo electrónico asociado a tu usuario
         <input
           type="email"
@@ -57,7 +58,7 @@ export function ForgotPasswordForm() {
           onChange={(event) => setEmail(event.target.value)}
           required
         />
-      </label>
+      </ValidatedLabel>
       {error && (
         <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
           {error}

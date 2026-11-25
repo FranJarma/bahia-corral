@@ -1,4 +1,5 @@
 'use client';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
 
 export type MemberSummary = {
@@ -46,7 +47,7 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
           void call('POST', { email, role });
         }}
       >
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Correo de la persona
           <input
             type="email"
@@ -54,7 +55,7 @@ export function TeamManagement({ members }: { members: MemberSummary[] }) {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
           />
-        </label>
+        </ValidatedLabel>
         <label className="grid gap-2 text-sm font-semibold">
           Rol
           <select value={role} onChange={(event) => setRole(event.target.value as typeof role)}>

@@ -1,4 +1,5 @@
 'use client';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useEffect, useState } from 'react';
 
 type Unit = { id: string; name: string; capacity_total: number };
@@ -62,7 +63,7 @@ export function NewReservationForm() {
         void submit();
       }}
     >
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Alojamiento
         <select required value={unitId} onChange={(e) => setUnitId(e.target.value)}>
           {units.map((u) => (
@@ -71,9 +72,9 @@ export function NewReservationForm() {
             </option>
           ))}
         </select>
-      </label>
+      </ValidatedLabel>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Ingreso
           <input
             required
@@ -81,8 +82,8 @@ export function NewReservationForm() {
             value={checkin}
             onChange={(e) => setCheckin(e.target.value)}
           />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold">
+        </ValidatedLabel>
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Salida
           <input
             required
@@ -91,9 +92,9 @@ export function NewReservationForm() {
             value={checkout}
             onChange={(e) => setCheckout(e.target.value)}
           />
-        </label>
+        </ValidatedLabel>
       </div>
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Adultos
         <input
           required
@@ -103,22 +104,22 @@ export function NewReservationForm() {
           value={adults}
           onChange={(e) => setAdults(Number(e.target.value))}
         />
-      </label>
+      </ValidatedLabel>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Nombre
           <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        </label>
-        <label className="grid gap-2 text-sm font-semibold">
+        </ValidatedLabel>
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Apellido
           <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        </label>
+        </ValidatedLabel>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Teléfono
           <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-        </label>
+        </ValidatedLabel>
         <label className="grid gap-2 text-sm font-semibold">
           Correo (opcional)
           <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -133,10 +134,10 @@ export function NewReservationForm() {
         Confirmar ahora sin cobrar seña
       </label>
       {confirmWithoutDeposit && (
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Motivo de la excepción
           <textarea required rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
-        </label>
+        </ValidatedLabel>
       )}
       {message && (
         <p role="alert" className="text-sm text-red-700">

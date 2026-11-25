@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight, X } from 'lucide-react';
 import { useState } from 'react';
 
@@ -156,7 +157,7 @@ export function RatesTable({ initial }: { initial: RateRow[] }) {
             </p>
             <form onSubmit={(event) => void submit(event)} className="grid gap-4">
               {active.map((rate) => (
-                <label key={rate.min_guests} className="public-form-label">
+                <ValidatedLabel key={rate.min_guests} className="public-form-label">
                   {rate.min_guests} a {rate.max_guests} huéspedes que pagan
                   <input
                     required
@@ -166,7 +167,7 @@ export function RatesTable({ initial }: { initial: RateRow[] }) {
                     value={draft[String(rate.min_guests)] ?? ''}
                     onChange={(e) => setDraft((v) => ({ ...v, [rate.min_guests]: e.target.value }))}
                   />
-                </label>
+                </ValidatedLabel>
               ))}
               <div className="mt-2 flex justify-end gap-3">
                 <button type="button" className="secondary-button" onClick={() => setEditing(null)}>

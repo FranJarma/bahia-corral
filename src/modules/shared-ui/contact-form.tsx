@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
 
@@ -33,12 +34,12 @@ export function ContactForm() {
         Contanos qué tenés en mente y te ayudamos a planificar tu visita.
       </p>
       <div className="mt-7 grid gap-5">
-        <label className="public-form-label">
-          Nombre y apellido *
+        <ValidatedLabel className="public-form-label">
+          Nombre y apellido
           <input required name="name" autoComplete="name" placeholder="Tu nombre" />
-        </label>
-        <label className="public-form-label">
-          Email *
+        </ValidatedLabel>
+        <ValidatedLabel className="public-form-label">
+          Email
           <input
             required
             name="email"
@@ -46,7 +47,7 @@ export function ContactForm() {
             type="email"
             placeholder="tu@email.com"
           />
-        </label>
+        </ValidatedLabel>
         <fieldset>
           <legend className="text-[12px] font-semibold">¿Qué servicios te interesan?</legend>
           <p className="my-3 text-[11px] text-muted">Opcional · Podés elegir más de uno.</p>
@@ -73,10 +74,10 @@ export function ContactForm() {
             ))}
           </div>
         </fieldset>
-        <label className="public-form-label">
-          Mensaje *
+        <ValidatedLabel className="public-form-label">
+          Mensaje
           <textarea required name="message" rows={4} placeholder="¿En qué podemos ayudarte?" />
-        </label>
+        </ValidatedLabel>
       </div>
       <p className="mt-4 text-[11px] leading-6 text-muted">Los campos con * son obligatorios.</p>
       <button type="submit" className="primary-button mt-5 w-full uppercase">

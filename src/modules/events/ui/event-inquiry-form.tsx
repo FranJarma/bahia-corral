@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -62,8 +63,8 @@ export function EventInquiryForm() {
           </p>
         </div>
         <div className="public-field-group mt-7">
-          <label className="public-form-label">
-            Tipo de evento <span className="sr-only">obligatorio</span>
+          <ValidatedLabel className="public-form-label">
+            Tipo de evento 
             <select required name="eventType" defaultValue="">
               <option value="" disabled>
                 Seleccionar
@@ -74,7 +75,7 @@ export function EventInquiryForm() {
               <option value="Social">Evento social</option>
               <option value="Otro">Otro</option>
             </select>
-          </label>
+          </ValidatedLabel>
           <label className="public-form-label">
             Fecha estimada
             <input name="preferredDate" type="date" />
@@ -83,17 +84,17 @@ export function EventInquiryForm() {
             Cantidad de personas
             <input name="guestsCount" min="1" type="number" placeholder="Aproximada" />
           </label>
-          <label className="public-form-label">
-            Nombre y apellido *
+          <ValidatedLabel className="public-form-label">
+            Nombre y apellido
             <input
               required
               name="contactName"
               autoComplete="name"
               placeholder="Escribí tu nombre"
             />
-          </label>
-          <label className="public-form-label">
-            Email *
+          </ValidatedLabel>
+          <ValidatedLabel className="public-form-label">
+            Email
             <input
               required
               name="email"
@@ -101,9 +102,9 @@ export function EventInquiryForm() {
               autoComplete="email"
               placeholder="Escribí tu email"
             />
-          </label>
-          <label className="public-form-label">
-            Teléfono *
+          </ValidatedLabel>
+          <ValidatedLabel className="public-form-label">
+            Teléfono
             <input
               required
               name="phone"
@@ -111,7 +112,7 @@ export function EventInquiryForm() {
               autoComplete="tel"
               placeholder="Escribí tu teléfono"
             />
-          </label>
+          </ValidatedLabel>
         </div>
         <label className="public-form-label mt-4">
           Mensaje

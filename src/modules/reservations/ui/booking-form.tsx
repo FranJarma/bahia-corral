@@ -1,5 +1,6 @@
 'use client';
 
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { ArrowRight, CalendarDays, Check, ChevronDown, Home, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -309,8 +310,8 @@ export function BookingForm({
               className="mt-6 grid gap-5"
             >
               <div className="public-field-group">
-                <label className="public-form-label">
-                  Check-in *
+                <ValidatedLabel className="public-form-label">
+                  Check-in
                   <input
                     required
                     type="date"
@@ -318,9 +319,9 @@ export function BookingForm({
                     min={today}
                     onChange={(event) => setCheckin(event.target.value)}
                   />
-                </label>
-                <label className="public-form-label">
-                  Check-out *
+                </ValidatedLabel>
+                <ValidatedLabel className="public-form-label">
+                  Check-out
                   <input
                     required
                     type="date"
@@ -328,7 +329,7 @@ export function BookingForm({
                     min={checkin}
                     onChange={(event) => setCheckout(event.target.value)}
                   />
-                </label>
+                </ValidatedLabel>
               </div>
               <div className="public-field-group">
                 <label className="public-form-label">
@@ -445,8 +446,8 @@ export function BookingForm({
               className="mt-6 grid gap-5"
             >
               <div className="public-field-group">
-                <label className="public-form-label">
-                  Nombre *
+                <ValidatedLabel className="public-form-label">
+                  Nombre
                   <input
                     required
                     autoComplete="given-name"
@@ -454,9 +455,9 @@ export function BookingForm({
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Tu nombre"
                   />
-                </label>
-                <label className="public-form-label">
-                  Apellido *
+                </ValidatedLabel>
+                <ValidatedLabel className="public-form-label">
+                  Apellido
                   <input
                     required
                     autoComplete="family-name"
@@ -464,10 +465,10 @@ export function BookingForm({
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Tu apellido"
                   />
-                </label>
+                </ValidatedLabel>
               </div>
-              <label className="public-form-label">
-                Correo electrónico *
+              <ValidatedLabel className="public-form-label">
+                Correo electrónico
                 <input
                   required
                   type="email"
@@ -476,9 +477,9 @@ export function BookingForm({
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                 />
-              </label>
-              <label className="public-form-label">
-                Teléfono *
+              </ValidatedLabel>
+              <ValidatedLabel className="public-form-label">
+                Teléfono
                 <input
                   required
                   type="tel"
@@ -487,7 +488,7 @@ export function BookingForm({
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Tu teléfono"
                 />
-              </label>
+              </ValidatedLabel>
               <p className="text-[11px] leading-6 text-muted">
                 Al continuar, aceptás las{' '}
                 <Link className="underline" href="/terminos-y-condiciones">

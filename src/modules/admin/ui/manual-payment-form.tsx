@@ -1,4 +1,5 @@
 'use client';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
 export function ManualPaymentForm() {
   const [reservationId, setReservationId] = useState('');
@@ -47,7 +48,7 @@ export function ManualPaymentForm() {
         Registrá únicamente dinero que ya verificaste. Subir un comprobante no equivale a acreditar
         el pago.
       </p>
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         ID de reserva
         <input
           required
@@ -55,9 +56,9 @@ export function ManualPaymentForm() {
           value={reservationId}
           onChange={(e) => setReservationId(e.target.value)}
         />
-      </label>
+      </ValidatedLabel>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Importe recibido (ARS)
           <input
             required
@@ -67,7 +68,7 @@ export function ManualPaymentForm() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
-        </label>
+        </ValidatedLabel>
         <label className="grid gap-2 text-sm font-semibold">
           Medio
           <select value={method} onChange={(e) => setMethod(e.target.value)}>

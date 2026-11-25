@@ -1,5 +1,7 @@
 'use client';
 
+import { PasswordInput } from '@/modules/shared-ui/password-input';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import Link from 'next/link';
 import { type FormEvent, useState } from 'react';
 
@@ -52,28 +54,26 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
   return (
     <form className="mt-8 grid gap-5" onSubmit={submit}>
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Nueva contraseña
-        <input
-          type="password"
+        <PasswordInput
           autoComplete="new-password"
           minLength={12}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           required
         />
-      </label>
-      <label className="grid gap-2 text-sm font-semibold">
+      </ValidatedLabel>
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Confirmar nueva contraseña
-        <input
-          type="password"
+        <PasswordInput
           autoComplete="new-password"
           minLength={12}
           value={confirmation}
           onChange={(event) => setConfirmation(event.target.value)}
           required
         />
-      </label>
+      </ValidatedLabel>
       <p className="text-xs leading-6 text-muted">
         Usá al menos 12 caracteres y una contraseña exclusiva para esta cuenta.
       </p>

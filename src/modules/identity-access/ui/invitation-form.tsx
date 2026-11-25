@@ -1,5 +1,7 @@
 'use client';
 
+import { PasswordInput } from '@/modules/shared-ui/password-input';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
 
 import { authClient as auth } from '@/modules/identity-access/ui/auth-client';
@@ -60,11 +62,11 @@ export function InvitationForm({ token }: { token: string }) {
       </p>
       {mode === 'register' && (
         <>
-          <label className="grid gap-2 text-sm font-semibold">
+          <ValidatedLabel className="grid gap-2 text-sm font-semibold">
             Nombre completo
             <input value={name} onChange={(event) => setName(event.target.value)} required />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold">
+          </ValidatedLabel>
+          <ValidatedLabel className="grid gap-2 text-sm font-semibold">
             Nombre de usuario
             <input
               type="text"
@@ -78,8 +80,8 @@ export function InvitationForm({ token }: { token: string }) {
               onChange={(event) => setUsername(event.target.value)}
               required
             />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold">
+          </ValidatedLabel>
+          <ValidatedLabel className="grid gap-2 text-sm font-semibold">
             Correo invitado
             <input
               type="email"
@@ -87,18 +89,17 @@ export function InvitationForm({ token }: { token: string }) {
               onChange={(event) => setEmail(event.target.value)}
               required
             />
-          </label>
-          <label className="grid gap-2 text-sm font-semibold">
+          </ValidatedLabel>
+          <ValidatedLabel className="grid gap-2 text-sm font-semibold">
             Elegí una contraseña
-            <input
-              type="password"
+            <PasswordInput
               autoComplete="new-password"
               minLength={12}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
             />
-          </label>
+          </ValidatedLabel>
         </>
       )}
       {message && (

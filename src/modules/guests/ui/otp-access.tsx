@@ -1,4 +1,5 @@
 'use client';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import { useState } from 'react';
 
 export function OtpAccess() {
@@ -50,7 +51,7 @@ export function OtpAccess() {
           ? 'Utilizá la referencia de reserva y el correo que registraste al reservar.'
           : 'El código tiene seis dígitos y vence a los cinco minutos.'}
       </p>
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Referencia de reserva
         <input
           required
@@ -58,8 +59,8 @@ export function OtpAccess() {
           onChange={(e) => setReference(e.target.value)}
           disabled={step === 'VERIFY'}
         />
-      </label>
-      <label className="grid gap-2 text-sm font-semibold">
+      </ValidatedLabel>
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Correo electrónico
         <input
           required
@@ -68,9 +69,9 @@ export function OtpAccess() {
           onChange={(e) => setEmail(e.target.value)}
           disabled={step === 'VERIFY'}
         />
-      </label>
+      </ValidatedLabel>
       {step === 'VERIFY' && (
-        <label className="grid gap-2 text-sm font-semibold">
+        <ValidatedLabel className="grid gap-2 text-sm font-semibold">
           Código de seis dígitos
           <input
             required
@@ -80,7 +81,7 @@ export function OtpAccess() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
           />
-        </label>
+        </ValidatedLabel>
       )}
       {message && (
         <p role="status" className="text-sm text-brand">

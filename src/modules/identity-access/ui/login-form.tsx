@@ -1,5 +1,7 @@
 'use client';
 
+import { PasswordInput } from '@/modules/shared-ui/password-input';
+import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -32,7 +34,7 @@ export function LoginForm() {
         }
       }}
     >
-      <label className="grid gap-2 text-sm font-semibold">
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Nombre de usuario
         <input
           type="text"
@@ -43,17 +45,16 @@ export function LoginForm() {
           onChange={(e) => setUsername(e.target.value)}
           required
         />
-      </label>
-      <label className="grid gap-2 text-sm font-semibold">
+      </ValidatedLabel>
+      <ValidatedLabel className="grid gap-2 text-sm font-semibold">
         Contraseña
-        <input
-          type="password"
+        <PasswordInput
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-      </label>
+      </ValidatedLabel>
       <div className="flex justify-end">
         <Link
           href="/admin/recuperar-contrasena"
