@@ -109,12 +109,12 @@ export function AccommodationList() {
       <div className="min-w-0">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <p className="text-xs text-muted">{units.length} alojamientos encontrados</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="relative">
+          <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+            <div className="relative w-full sm:w-[248px]">
               <Search
                 aria-hidden="true"
                 size={15}
-                className="absolute top-1/2 left-3 -translate-y-1/2 text-muted"
+                className="pointer-events-none absolute top-1/2 left-3.5 -translate-y-1/2 text-muted"
               />
               <input
                 type="search"
@@ -122,14 +122,14 @@ export function AccommodationList() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar alojamiento"
-                className="!h-11 w-[180px] pl-9 text-xs sm:w-[240px]"
+                className="!h-11 w-full !rounded-[10px] !border-[#d6ccb9] !bg-[#fcfaf6] !pl-11 !pr-4 text-[13px] placeholder:text-muted"
               />
             </div>
             <select
               aria-label="Ordenar resultados"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="!h-11 min-w-[140px] text-xs"
+              className="!h-11 min-w-[160px] !rounded-[10px] !border-[#d6ccb9] !bg-[#fcfaf6] text-[13px]"
             >
               <option value="all">Orden original</option>
               <option value="capacity">Mayor capacidad</option>
