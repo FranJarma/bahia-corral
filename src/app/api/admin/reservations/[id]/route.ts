@@ -10,6 +10,7 @@ import {
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 import { confirmReservation } from '@/modules/reservations/application/confirm-reservation';
+import { getReservationForEdit } from '@/modules/reservations/application/get-reservation-for-edit';
 import { modifyReservation } from '@/modules/reservations/application/modify-reservation';
 import { transitionReservation } from '@/modules/reservations/application/transition-reservation';
 
@@ -29,6 +30,16 @@ const command = z.discriminatedUnion('action', [
     reason: z.string().min(3),
   }),
 ]);
+export async function GET(_request:NextRequest,{params}:{params:Promise<{id:string}>}) {
+  try {
+    const actor=await getAdminActor();
+    if(!actor)return NextResponse.json({error:'No autorizado'},{status:401});
+    const id=z.uuid().parse((await params).id);
+    const reservation=await getReservationForEdit(actor,id);
+    if(!reservation)return NextResponse.json({error:'La reserva no está disponible.'},{status:404});
+    return successJson({reservation});
+  }catch(error){return failResponse(error);}
+}
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     assertTrustedOrigin(request);

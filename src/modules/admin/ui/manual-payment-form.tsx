@@ -14,9 +14,11 @@ function date(value: string) {
   return value.slice(8, 10) + '/' + value.slice(5, 7) + '/' + value.slice(0, 4);
 }
 
-export function ManualPaymentForm({ reservations }: { reservations: ReservationSummary[] }) {
+export function ManualPaymentForm({ reservations, initialReservationId='', lockReservation=false, embedded=false, onSaved, onCancel }: {
+  reservations:ReservationSummary[]; initialReservationId?:string; lockReservation?:boolean; embedded?:boolean; onSaved?:(message:string)=>void; onCancel?:()=>void;
+}) {
   const router = useRouter();
-  const [reservationId, setReservationId] = useState('');
+  const [reservationId, setReservationId] = useState(initialReservationId);
   const [amount, setAmount] = useState(''),
     [method, setMethod] = useState('TRANSFER'),
     [reference, setReference] = useState('');
@@ -58,11 +60,9 @@ export function ManualPaymentForm({ reservations }: { reservations: ReservationS
       setAmount('');
       setReference('');
       setReservationId('');
-      setMessage(
-        json.confirmation === 'CONFLICT'
-          ? 'Pago registrado. La reserva requiere revisión de disponibilidad.'
-          : 'Pago registrado correctamente.',
-      );
+      const successMessage=json.confirmation==='CONFLICT'?'Pago registrado. La reserva requiere revisión de disponibilidad.':'Pago registrado correctamente.';
+      setMessage(successMessage);
+      onSaved?.(successMessage);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo registrar el pago.');
@@ -72,13 +72,13 @@ export function ManualPaymentForm({ reservations }: { reservations: ReservationS
   }
   return (
     <form
-      className="surface-card admin-form p-6"
+      className={embedded ? "admin-form" : "surface-card admin-form p-6"}
       onSubmit={(e) => {
         e.preventDefault();
         void submit();
       }}
     >
-      <h2 className="editorial text-2xl">Registrar ingreso manual</h2>
+      {!embedded && <h2 className="editorial text-2xl">Registrar ingreso manual</h2>}
       <p className="text-sm text-muted">
         Registrá únicamente dinero que ya verificaste. Subir un comprobante no equivale a acreditar
         el pago.
@@ -89,7 +89,7 @@ export function ManualPaymentForm({ reservations }: { reservations: ReservationS
           required
           value={reservationId}
           onChange={(e) => setReservationId(e.target.value)}
-          disabled={!eligible.length || busy}
+          disabled={lockReservation || !eligible.length || busy}
         >
           <option value="">
             {eligible.length ? 'Elegí una reserva' : 'No hay reservas con saldo pendiente'}
@@ -147,9 +147,12 @@ export function ManualPaymentForm({ reservations }: { reservations: ReservationS
           {message}
         </p>
       )}
-      <button className="primary-button w-fit" disabled={busy || !eligible.length}>
-        {busy ? 'Registrando…' : 'Registrar pago'}
-      </button>
+      <div className={embedded ? 'admin-form-actions' : 'flex'}>
+        {onCancel && <button type="button" className="secondary-button" disabled={busy} onClick={onCancel}>Cancelar</button>}
+        <button className="primary-button w-fit" disabled={busy || !eligible.length}>
+          {busy ? 'Registrando…' : 'Registrar pago'}
+        </button>
+      </div>
     </form>
   );
 }
