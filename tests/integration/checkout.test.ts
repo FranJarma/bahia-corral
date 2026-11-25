@@ -1,15 +1,15 @@
 import { createHmac, randomUUID } from 'node:crypto';
-import { NextRequest } from 'next/server';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { NextRequest } from 'next/server';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { POST as verifyGuestOtp } from '@/app/api/public/otp/verify/route';
-import { getCheckoutSession } from '@/modules/availability/application/checkout-session';
 import { getSqlClient } from '@/infrastructure/db/client';
+import { getCheckoutSession } from '@/modules/availability/application/checkout-session';
 import { releaseExpiredHolds, startCheckout } from '@/modules/availability/application/holds';
 import { searchAvailability } from '@/modules/availability/application/search-availability';
 import { createPaymentRequest } from '@/modules/payments/application/create-payment-request';
@@ -298,14 +298,24 @@ it('un OTP válido recupera sólo el checkout de esa reserva en otro dispositivo
   vi.stubEnv('BETTER_AUTH_SECRET', secret);
   const hold = await checkoutAt('2027-06-17');
   const reservation = await identify(hold, 'recover@example.com');
-  const id = randomUUID(), code = '123456';
-  const codeHash = createHmac('sha256', secret).update(id + ':' + code).digest('hex');
+  const id = randomUUID(),
+    code = '123456';
+  const codeHash = createHmac('sha256', secret)
+    .update(id + ':' + code)
+    .digest('hex');
   await db`INSERT INTO guest_otp_challenges(id,tenant_id,reservation_id,email,code_hash,expires_at)
     VALUES(${id},${tenantId},${reservation.reservationId},'recover@example.com',${codeHash},now()+interval '5 minutes')`;
-  const response = await verifyGuestOtp(new NextRequest('http://localhost/api/public/otp/verify', {
-    method: 'POST', headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reference: reservation.reference, email: 'recover@example.com', code }),
-  }));
+  const response = await verifyGuestOtp(
+    new NextRequest('http://localhost/api/public/otp/verify', {
+      method: 'POST',
+      headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reference: reservation.reference,
+        email: 'recover@example.com',
+        code,
+      }),
+    }),
+  );
   expect(response.status).toBe(200);
   const token = response.cookies.get('bahia_checkout')?.value;
   const session = await getCheckoutSession(checkoutContext(), token);
@@ -321,13 +331,21 @@ it('reutilizar un correo no revela el teléfono ni el nombre del contacto anteri
     VALUES(${tenantId},'Contacto','Privado','privacy@example.com','3871111111')`;
   const hold = await checkoutAt('2027-06-19');
   await attachGuestToHold(checkoutContext(), {
-    holdId: hold.holdId, checkoutToken: hold.checkoutToken, origin: 'WEB',
-    contact: { firstName: 'Solicitante', lastName: 'Nuevo', email: 'privacy@example.com', phone: '3872222222' },
+    holdId: hold.holdId,
+    checkoutToken: hold.checkoutToken,
+    origin: 'WEB',
+    contact: {
+      firstName: 'Solicitante',
+      lastName: 'Nuevo',
+      email: 'privacy@example.com',
+      phone: '3872222222',
+    },
   });
   const session = await getCheckoutSession(checkoutContext(), hold.checkoutToken);
   expect(session?.contact?.firstName).toBe('Solicitante');
   expect(session?.contact?.phone).toBe('3872222222');
-  const [stored] = await db`SELECT first_name,phone FROM guests WHERE email='privacy@example.com' AND merged_into_id IS NULL`;
+  const [stored] =
+    await db`SELECT first_name,phone FROM guests WHERE email='privacy@example.com' AND merged_into_id IS NULL`;
   expect(stored.first_name).toBe('Contacto');
   expect(stored.phone).toBe('3871111111');
 });
