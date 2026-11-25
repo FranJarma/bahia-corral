@@ -38,6 +38,13 @@ for (const width of [1440, 390]) {
       await expect(arrival).toHaveValue(next);
       const checkout = await departure.inputValue();
       await departure.click();
+      const cancelled = shift(checkout, 1);
+      await picker
+        .getByRole('button', {
+          name: fullDate.format(new Date(cancelled + 'T12:00:00')),
+          exact: true,
+        })
+        .click();
       await picker.getByRole('button', { name: 'Cerrar', exact: true }).click();
       await expect(departure).toHaveValue(checkout);
       await departure.click();
