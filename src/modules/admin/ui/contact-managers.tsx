@@ -49,7 +49,7 @@ function ContactManager({
     fields = guests ? guestFields : eventFields;
   const createLabel = guests ? 'Nuevo huésped' : 'Nueva consulta de evento';
   const title = editing ? (guests ? 'Editar huésped' : 'Editar consulta de evento') : createLabel;
-  function edit(record?: RecordData) {
+  function edit(record?: Record<string, string>) {
     setDraft(record ?? { status: 'NEW', notes: '' });
     setError('');
     setEditing(record?.id ?? null);
