@@ -8,9 +8,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { getSqlClient } from '@/infrastructure/db/client';
 import { releaseExpiredHolds, startCheckout } from '@/modules/availability/application/holds';
 import { searchAvailability } from '@/modules/availability/application/search-availability';
-import { listReservations } from '@/modules/reservations/application/list-reservations';
 import { attachGuestToHold } from '@/modules/reservations/application/attach-guest';
 import { confirmReservation } from '@/modules/reservations/application/confirm-reservation';
+import { listReservations } from '@/modules/reservations/application/list-reservations';
 import { modifyReservation } from '@/modules/reservations/application/modify-reservation';
 
 // El guard de Next.js no se ejecuta fuera de su runtime; la BD y los casos de uso son reales.
@@ -129,19 +129,31 @@ describe('Checkout real con edades de menores', () => {
   });
 });
 
-const checkoutContext = () => ({ tenantId, actorId: 'checkout-tests', actorType: 'SYSTEM' as const });
+const checkoutContext = () => ({
+  tenantId,
+  actorId: 'checkout-tests',
+  actorType: 'SYSTEM' as const,
+});
 const guestContact = (email: string) => ({
-  firstName: 'Persona', lastName: 'Prueba', email, phone: '3870000000',
+  firstName: 'Persona',
+  lastName: 'Prueba',
+  email,
+  phone: '3870000000',
 });
 async function checkoutAt(checkin: string) {
   return startCheckout(checkoutContext(), {
-    unitId, checkin, checkout: new Date(Date.parse(checkin) + 86400000).toISOString().slice(0, 10),
-    adults: 2, childAges: [],
+    unitId,
+    checkin,
+    checkout: new Date(Date.parse(checkin) + 86400000).toISOString().slice(0, 10),
+    adults: 2,
+    childAges: [],
   });
 }
 async function identify(hold: Awaited<ReturnType<typeof startCheckout>>, email: string) {
   return attachGuestToHold(checkoutContext(), {
-    holdId: hold.holdId, checkoutToken: hold.checkoutToken, origin: 'WEB',
+    holdId: hold.holdId,
+    checkoutToken: hold.checkoutToken,
+    origin: 'WEB',
     contact: guestContact(email),
   });
 }
@@ -152,20 +164,25 @@ describe('Continuidad de la reserva y vencimiento', () => {
     const first = await identify(hold, 'retry@example.com');
     const retry = await identify(hold, 'retry@example.com');
     expect(retry).toEqual(first);
-    const [counts] = await db`SELECT count(*)::int AS count FROM reservations WHERE quote_id=${hold.quoteId}`;
+    const [counts] =
+      await db`SELECT count(*)::int AS count FROM reservations WHERE quote_id=${hold.quoteId}`;
     expect(counts.count).toBe(1);
   });
 
   it('dos intentos concurrentes del mismo correo no crean dos reservas pendientes', async () => {
-    const first = await checkoutAt('2027-06-03'), second = await checkoutAt('2027-06-05');
+    const first = await checkoutAt('2027-06-03'),
+      second = await checkoutAt('2027-06-05');
     const results = await Promise.allSettled([
-      identify(first, 'concurrent@example.com'), identify(second, 'CONCURRENT@example.com'),
+      identify(first, 'concurrent@example.com'),
+      identify(second, 'CONCURRENT@example.com'),
     ]);
-    expect(results.filter(r => r.status === 'fulfilled')).toHaveLength(1);
-    const [counts] = await db`SELECT count(*)::int AS count FROM reservations r JOIN guests g ON g.id=r.guest_id
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const [counts] =
+      await db`SELECT count(*)::int AS count FROM reservations r JOIN guests g ON g.id=r.guest_id
       WHERE lower(trim(g.email))='concurrent@example.com' AND r.status='PENDING_CONFIRMATION'`;
     expect(counts.count).toBe(1);
-    const [guests] = await db`SELECT count(*)::int AS count FROM guests WHERE lower(trim(email))='concurrent@example.com'`;
+    const [guests] =
+      await db`SELECT count(*)::int AS count FROM guests WHERE lower(trim(email))='concurrent@example.com'`;
     expect(guests.count).toBe(1);
   });
 
@@ -174,11 +191,12 @@ describe('Continuidad de la reserva y vencimiento', () => {
     const old = await identify(first, 'reuse@example.com');
     await db`UPDATE reservation_holds SET expires_at=now()-interval '1 second' WHERE id=${first.holdId}`;
     const rows = await listReservations(checkoutContext());
-    expect(rows.find(r => r.id === old.reservationId)?.status).toBe('NOT_COMPLETED');
+    expect(rows.find((r) => r.id === old.reservationId)?.status).toBe('NOT_COMPLETED');
     const second = await checkoutAt('2027-06-07');
     const next = await identify(second, 'REUSE@example.com');
     expect(next.reservationId).not.toBe(old.reservationId);
-    const ids = await db`SELECT DISTINCT guest_id FROM reservations WHERE id IN (${old.reservationId},${next.reservationId})`;
+    const ids =
+      await db`SELECT DISTINCT guest_id FROM reservations WHERE id IN (${old.reservationId},${next.reservationId})`;
     expect(ids).toHaveLength(1);
   });
 
@@ -186,22 +204,30 @@ describe('Continuidad de la reserva y vencimiento', () => {
     const hold = await checkoutAt('2027-06-09');
     await db`UPDATE reservation_holds SET expires_at=now()-interval '1 second' WHERE id=${hold.holdId}`;
     const units = await searchAvailability(checkoutContext(), {
-      checkin: '2027-06-09', checkout: '2027-06-10', guests: 2,
+      checkin: '2027-06-09',
+      checkout: '2027-06-10',
+      guests: 2,
     });
-    expect(units.some(u => u.id === unitId)).toBe(true);
+    expect(units.some((u) => u.id === unitId)).toBe(true);
     const [stored] = await db`SELECT status FROM reservation_holds WHERE id=${hold.holdId}`;
     expect(stored.status).toBe('EXPIRED');
   });
 
-  it.each(['VERIFYING', 'UNCERTAIN'])('no libera un pago en estado %s aunque venza el plazo', async (status) => {
-    const date = status === 'VERIFYING' ? '2027-06-11' : '2027-06-13';
-    const hold = await checkoutAt(date), reservation = await identify(hold, status.toLowerCase() + '@example.com');
-    await db`UPDATE reservation_holds SET status=${status},payment_started_at=now()-interval '20 minutes',
+  it.each(['VERIFYING', 'UNCERTAIN'])(
+    'no libera un pago en estado %s aunque venza el plazo',
+    async (status) => {
+      const date = status === 'VERIFYING' ? '2027-06-11' : '2027-06-13';
+      const hold = await checkoutAt(date),
+        reservation = await identify(hold, status.toLowerCase() + '@example.com');
+      await db`UPDATE reservation_holds SET status=${status},payment_started_at=now()-interval '20 minutes',
       expires_at=now()-interval '10 minutes',verification_deadline=now()-interval '5 minutes' WHERE id=${hold.holdId}`;
-    await releaseExpiredHolds(checkoutContext());
-    const [stored] = await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
-    expect(stored.status).toBe('PENDING_CONFIRMATION');
-    const [allocation] = await db`SELECT active FROM inventory_allocations WHERE hold_id=${hold.holdId}`;
-    expect(allocation.active).toBe(true);
-  });
+      await releaseExpiredHolds(checkoutContext());
+      const [stored] =
+        await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
+      expect(stored.status).toBe('PENDING_CONFIRMATION');
+      const [allocation] =
+        await db`SELECT active FROM inventory_allocations WHERE hold_id=${hold.holdId}`;
+      expect(allocation.active).toBe(true);
+    },
+  );
 });

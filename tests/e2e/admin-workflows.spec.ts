@@ -232,7 +232,10 @@ for (const width of [1280, 390]) {
       await page.screenshot({ path: info.outputPath('acciones-reserva.png'), fullPage: true });
       await actions.getByRole('button', { name: 'Ver', exact: true }).click();
       await expect(page).toHaveURL(/\/admin\/reservas$/);
-      const detail = page.getByRole('dialog', { name: 'Reserva ' + reservation.reference, exact: true });
+      const detail = page.getByRole('dialog', {
+        name: 'Reserva ' + reservation.reference,
+        exact: true,
+      });
       await expect(detail).toBeVisible();
       await expect(detail.getByText('CONFIRMED', { exact: true })).toHaveCount(0);
       await expect(detail.getByText('Confirmada', { exact: true })).toBeVisible();
