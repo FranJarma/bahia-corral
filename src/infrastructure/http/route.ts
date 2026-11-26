@@ -2,6 +2,8 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
 
+import { getPostgresErrorInfo } from '@/infrastructure/db/postgres-error';
+
 export function assertTrustedOrigin(request: NextRequest): void {
   const origin = request.headers.get('origin');
   if (!origin || origin !== request.nextUrl.origin) throw new Error('Origen de solicitud inválido');
@@ -14,7 +16,18 @@ export async function jsonInput<T>(
   return schema.parse(raw);
 }
 export function failResponse(error: unknown) {
-  const databaseError = error instanceof Error && error.message.startsWith('Failed query:');
+  const postgres = getPostgresErrorInfo(error);
+  const databaseError =
+    Boolean(postgres) || (error instanceof Error && error.message.startsWith('Failed query:'));
+  if (postgres?.code === '23P01' && postgres.constraint === 'no_inventory_overlap')
+    return NextResponse.json(
+      {
+        code: 'ACCOMMODATION_UNAVAILABLE',
+        error:
+          'Este alojamiento no está disponible para las fechas elegidas. Elegí otro alojamiento o cambiá las fechas.',
+      },
+      { status: 409 },
+    );
   if (error instanceof ZodError)
     return NextResponse.json(
       {
@@ -34,6 +47,7 @@ export function failResponse(error: unknown) {
       return NextResponse.json({ error: error.message }, { status: 409 });
   }
   console.error('Fallo de operación', {
+    ...(postgres ? { databaseCode: postgres.code, constraint: postgres.constraint } : {}),
     message: databaseError
       ? 'Operación de base de datos fallida'
       : error instanceof Error
