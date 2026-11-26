@@ -111,7 +111,7 @@ for (const width of [1280, 390]) {
       const next = page.getByRole('button', { name: 'Continuar', exact: true }).first();
       await expect(next).toBeEnabled();
       await next.click();
-      const alert = page.getByRole('alert');
+      const alert = page.getByRole('alert').filter({ hasText: 'Este alojamiento' });
       await expect(alert).toContainText('no está disponible');
       await expect(alert).toContainText('fechas');
       await expect(alert).not.toContainText('No pudimos completar la operación');
