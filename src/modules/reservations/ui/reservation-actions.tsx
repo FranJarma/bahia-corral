@@ -84,6 +84,8 @@ export function ReservationActions({
     }
   }
 
+  if (!canAct) return null;
+
   return (
     <aside
       className={
@@ -131,6 +133,7 @@ export function ReservationActions({
             Anular reserva
           </button>
           <AdminDialog
+            nested
             open={cancelOpen}
             onOpenChange={(open) => {
               if (!busy) {

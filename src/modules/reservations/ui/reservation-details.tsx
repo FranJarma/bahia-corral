@@ -14,6 +14,16 @@ export function ReservationDetails({
   onSaved?: () => void;
 }) {
   const balance = BigInt(r.amount_cents) - BigInt(r.paid_cents);
+  const amounts = [
+    ['Total de la estadía', r.amount_cents],
+    ['Importe abonado', r.paid_cents],
+  ];
+  if (r.status !== 'CANCELLED') {
+    amounts.push([
+      balance < 0n ? 'Crédito a favor' : 'Saldo pendiente',
+      (balance < 0n ? -balance : balance).toString(),
+    ]);
+  }
   return (
     <div className="grid gap-7">
       <section aria-label="Información de la estadía">
@@ -46,14 +56,7 @@ export function ReservationDetails({
           </div>
         </dl>
         <dl className="mt-6 grid gap-3 border-t border-[#e1d5c5] pt-5 text-sm">
-          {[
-            ['Total de la estadía', r.amount_cents],
-            ['Importe abonado', r.paid_cents],
-            [
-              balance < 0n ? 'Crédito a favor' : 'Saldo pendiente',
-              (balance < 0n ? -balance : balance).toString(),
-            ],
-          ].map(([label, amount]) => (
+          {amounts.map(([label, amount]) => (
             <div key={label} className="flex justify-between gap-4">
               <dt>{label}</dt>
               <dd className="shrink-0 font-semibold tabular-nums">
@@ -63,7 +66,7 @@ export function ReservationDetails({
           ))}
         </dl>
         {r.status === 'CANCELLED' && (
-          <p className="mt-4 text-sm leading-6 text-muted">
+          <p role="status" className="mt-4 text-sm leading-6 text-muted">
             La reserva está anulada y el alojamiento vuelve a estar disponible.
             {BigInt(r.paid_cents) > 0n &&
               ' El importe abonado se conserva; cualquier devolución se gestiona por separado.'}

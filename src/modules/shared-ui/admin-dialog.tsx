@@ -10,6 +10,7 @@ export function AdminDialog({
   description,
   children,
   wide = false,
+  nested = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -17,14 +18,21 @@ export function AdminDialog({
   description: string;
   children: ReactNode;
   wide?: boolean;
+  nested?: boolean;
 }) {
   const returnFocus = useRef<HTMLElement | null>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="admin-dialog-overlay" />
+        <Dialog.Overlay
+          className={'admin-dialog-overlay' + (nested ? ' admin-dialog-overlay--nested' : '')}
+        />
         <Dialog.Content
-          className={'admin-dialog-content' + (wide ? ' admin-dialog-wide' : '')}
+          className={
+            'admin-dialog-content' +
+            (wide ? ' admin-dialog-wide' : '') +
+            (nested ? ' admin-dialog-content--nested' : '')
+          }
           onOpenAutoFocus={() => {
             returnFocus.current =
               document.activeElement instanceof HTMLElement ? document.activeElement : null;

@@ -515,3 +515,10 @@ input.brand-date-input {
 .brand-calendar .rdp-button_next:hover:not(:disabled) {
   background: #eee6d9;
 }
+
+.admin-dialog-overlay--nested {
+  z-index: 100;
+}
+.admin-dialog-content--nested {
+  z-index: 110;
+}

@@ -78,6 +78,7 @@ for (const width of [1280, 390]) {
       await confirmation.getByRole('button', { name: 'Confirmar anulación', exact: true }).click();
       await expect(confirmation).not.toBeVisible();
       await expect(detail.getByText('Cancelada', { exact: true })).toBeVisible();
+      await expect(detail.getByText('Saldo pendiente', { exact: true })).toHaveCount(0);
       await expect(detail.getByRole('button', { name: 'Anular reserva', exact: true })).toHaveCount(
         0,
       );
