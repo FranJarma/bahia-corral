@@ -199,9 +199,11 @@ export function RefundPanel({ reservationId }: { reservationId: string }) {
               aria-busy={busy}
               aria-label="Solicitar devolución"
             >
+              <div className="grid gap-2">
               <ValidatedLabel className="public-form-label">
                 Pago a devolver
                 <select
+                  aria-describedby={'refund-available-' + reservationId}
                   required
                   value={selected?.id ?? ''}
                   disabled={busy}
@@ -212,13 +214,17 @@ export function RefundPanel({ reservationId }: { reservationId: string }) {
                 >
                   {eligible.map((payment) => (
                     <option key={payment.id} value={payment.id}>
-                      Mercado Pago ·{' '}
-                      {new Intl.DateTimeFormat('es-AR').format(new Date(payment.paidAt))} ·
-                      Disponible {money(payment.availableCents)}
+                      {new Intl.DateTimeFormat('es-AR').format(new Date(payment.paidAt))} ·{' '}
+                      {money(payment.availableCents)}
                     </option>
                   ))}
                 </select>
               </ValidatedLabel>
+              <p id={'refund-available-' + reservationId} className="text-sm leading-6 text-muted">
+                Disponible para devolver:{' '}
+                <strong className="font-semibold text-brand">{money(selected?.availableCents ?? '0')}</strong>
+              </p>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="public-form-label">
                   Tipo de devolución
