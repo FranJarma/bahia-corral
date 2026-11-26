@@ -14,6 +14,7 @@
   --positive: #176a4f;
   --warning: #93601d;
   --danger: #a83f3f;
+  --danger-hover: #8f3333;
   --font-sans: var(--font-montserrat), Montserrat, sans-serif;
   --font-editorial: var(--font-playfair), 'Playfair Display', Georgia, serif;
 }
@@ -521,4 +522,23 @@ input.brand-date-input {
 }
 .admin-dialog-content--nested {
   z-index: 110;
+}
+
+.reservation-cancel-action {
+  display: inline-flex;
+  min-height: 44px;
+  min-width: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color 0.2s;
+}
+.reservation-cancel-action:hover:not(:disabled) {
+  background: var(--danger-hover);
 }

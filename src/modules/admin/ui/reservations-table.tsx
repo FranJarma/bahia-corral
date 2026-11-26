@@ -6,6 +6,7 @@ import { useMemo, useState } from 'react';
 import { ManualPaymentForm } from '@/modules/admin/ui/manual-payment-form';
 import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
 import { EditReservationForm } from '@/modules/reservations/ui/edit-reservation-form';
+import { ReservationActions } from '@/modules/reservations/ui/reservation-actions';
 import { ReservationDetails } from '@/modules/reservations/ui/reservation-details';
 import {
   formatReservationDate as date,
@@ -220,6 +221,13 @@ export function ReservationsTable({
                       >
                         Registrar Pago
                       </button>
+                      <ReservationActions
+                        reservation={r}
+                        variant="row"
+                        onSaved={() =>
+                          setMessage('Reserva anulada. El alojamiento vuelve a estar disponible.')
+                        }
+                      />
                     </div>
                   </td>
                 </tr>

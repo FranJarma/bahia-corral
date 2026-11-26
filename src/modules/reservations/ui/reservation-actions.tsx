@@ -15,13 +15,16 @@ import { ValidatedLabel } from '@/modules/shared-ui/validated-label';
 export function ReservationActions({
   reservation,
   embedded = false,
+  variant = 'detail',
   onSaved,
 }: {
   reservation: ReservationSummary;
   embedded?: boolean;
+  variant?: 'detail' | 'row';
   onSaved?: () => void;
 }) {
   const { id: reservationId, status } = reservation;
+  const isRow = variant === 'row';
   const router = useRouter();
   const [reason, setReason] = useState('');
   const [cancelReason, setCancelReason] = useState('');
@@ -84,16 +87,21 @@ export function ReservationActions({
     }
   }
 
-  if (!canAct) return null;
+  if (!canAct || (isRow && !canCancel)) return null;
+  const Wrapper = isRow ? 'div' : 'aside';
 
   return (
-    <aside
+    <Wrapper
       className={
-        embedded ? 'grid gap-4 border-t border-[#e1d5c5] pt-6' : 'surface-card grid h-fit gap-4 p-6'
+        isRow
+          ? 'contents'
+          : embedded
+            ? 'grid gap-4 border-t border-[#e1d5c5] pt-6'
+            : 'surface-card grid h-fit gap-4 p-6'
       }
     >
-      {canAct && <h2 className="editorial text-2xl">Acciones</h2>}
-      {status === 'PENDING_CONFIRMATION' && (
+      {!isRow && <h2 className="editorial text-2xl">Acciones</h2>}
+      {!isRow && status === 'PENDING_CONFIRMATION' && (
         <>
           <label className="grid gap-2 text-sm font-semibold">
             Motivo para confirmar sin seña
@@ -114,7 +122,7 @@ export function ReservationActions({
           </button>
         </>
       )}
-      {status === 'CONFIRMED' && (
+      {!isRow && status === 'CONFIRMED' && (
         <button className="secondary-button" disabled={busy} onClick={() => void run('checkin')}>
           Registrar check-in
         </button>
@@ -122,7 +130,9 @@ export function ReservationActions({
       {canCancel && (
         <>
           <button
-            className="secondary-button"
+            type="button"
+            className={isRow ? 'reservation-cancel-action' : 'secondary-button'}
+            title={isRow ? 'Anular la reserva ' + reservation.reference : undefined}
             disabled={busy}
             onClick={() => {
               setError('');
@@ -130,10 +140,10 @@ export function ReservationActions({
               setCancelOpen(true);
             }}
           >
-            Anular reserva
+            {isRow ? 'Anular' : 'Anular reserva'}
           </button>
           <AdminDialog
-            nested
+            nested={!isRow}
             open={cancelOpen}
             onOpenChange={(open) => {
               if (!busy) {
@@ -202,21 +212,21 @@ export function ReservationActions({
           </AdminDialog>
         </>
       )}
-      {status === 'IN_STAY' && (
+      {!isRow && status === 'IN_STAY' && (
         <button className="primary-button" disabled={busy} onClick={() => void run('checkout')}>
           Registrar check-out
         </button>
       )}
-      {error && !cancelOpen && (
+      {!isRow && error && !cancelOpen && (
         <p role="alert" className="text-sm text-red-700">
           {error}
         </p>
       )}
-      {message && (
+      {!isRow && message && (
         <p role="status" className="text-sm text-positive">
           {message}
         </p>
       )}
-    </aside>
+    </Wrapper>
   );
 }

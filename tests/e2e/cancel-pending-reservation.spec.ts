@@ -68,7 +68,29 @@ for (const width of [1280, 390]) {
       await expect(confirmation).not.toBeVisible();
       await expect(cancel).toBeFocused();
       await expect(detail.getByText('Por Confirmar', { exact: true })).toBeVisible();
-      await cancel.click();
+      await detail.getByRole('button', { name: 'Cerrar', exact: true }).click();
+      const row = page
+        .getByRole('row')
+        .filter({ has: page.getByRole('button', { name: reservation.reference, exact: true }) });
+      const actions = row.getByRole('cell').last();
+      await expect(actions.locator('button')).toHaveText([
+        'Ver',
+        'Editar',
+        'Registrar Pago',
+        'Anular',
+      ]);
+      const rowCancel = actions.getByRole('button', { name: 'Anular', exact: true });
+      await rowCancel.scrollIntoViewIfNeeded();
+      await page.screenshot({ path: info.outputPath('anular-en-listado.png'), fullPage: true });
+      await rowCancel.click();
+      await expect(page).toHaveURL(/\/admin\/reservas$/);
+      await expect(page.getByRole('dialog')).toHaveCount(1);
+      await expect(confirmation).toContainText(reservation.reference);
+      await confirmation.getByRole('button', { name: 'Mantener reserva', exact: true }).click();
+      await expect(confirmation).not.toBeVisible();
+      await expect(rowCancel).toBeFocused();
+      await expect(row.getByText('Por Confirmar', { exact: true })).toBeVisible();
+      await rowCancel.click();
       await confirmation.getByRole('button', { name: 'Confirmar anulación', exact: true }).click();
       await expect(confirmation.getByRole('alert')).toBeVisible();
       await confirmation
@@ -77,6 +99,14 @@ for (const width of [1280, 390]) {
       await page.screenshot({ path: info.outputPath('anular-reserva.png'), fullPage: true });
       await confirmation.getByRole('button', { name: 'Confirmar anulación', exact: true }).click();
       await expect(confirmation).not.toBeVisible();
+      await expect(
+        page.getByText('Reserva anulada. El alojamiento vuelve a estar disponible.', {
+          exact: true,
+        }),
+      ).toBeVisible();
+      await page.getByRole('button', { name: 'Ver archivados', exact: true }).click();
+      await expect(row.getByRole('button', { name: 'Anular', exact: true })).toHaveCount(0);
+      await row.getByRole('button', { name: 'Ver', exact: true }).click();
       await expect(detail.getByText('Cancelada', { exact: true })).toBeVisible();
       await expect(detail.getByText('Saldo pendiente', { exact: true })).toHaveCount(0);
       await expect(detail.getByRole('button', { name: 'Anular reserva', exact: true })).toHaveCount(
@@ -84,7 +114,6 @@ for (const width of [1280, 390]) {
       );
       await page.screenshot({ path: info.outputPath('reserva-anulada.png'), fullPage: true });
       await detail.getByRole('button', { name: 'Cerrar', exact: true }).click();
-      await page.getByRole('button', { name: 'Ver archivados', exact: true }).click();
       await expect(page.getByRole('cell', { name: 'Cancelada', exact: true })).toBeVisible();
       const released = await page.request.post('/api/public/checkout/start', {
         data: { unitId: unit.id, checkin, checkout, adults: 2, childAges: [] },

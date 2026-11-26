@@ -224,7 +224,12 @@ for (const width of [1280, 390]) {
         .getByRole('row')
         .filter({ has: page.getByRole('button', { name: reservation.reference, exact: true }) });
       const actions = reservationRow.getByRole('cell').last();
-      await expect(actions.locator('a,button')).toHaveText(['Ver', 'Editar', 'Registrar Pago']);
+      await expect(actions.locator('a,button')).toHaveText([
+        'Ver',
+        'Editar',
+        'Registrar Pago',
+        'Anular',
+      ]);
       await expect(page.getByText('Más acciones', { exact: true })).toHaveCount(0);
       const tableBox = reservationRow.locator('xpath=ancestor::table/..');
       expect(await tableBox.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBeTruthy();
