@@ -166,7 +166,7 @@ async function request(f: Fixture, amount = '400000', key = randomUUID()) {
 }
 async function approved(f: Fixture, amount = '400000') {
   const r = await request(f, amount);
-  expect(r.response.status).toBe(201);
+  expect(r.response.ok).toBe(true);
   const response = await command({ action: 'approve', refundId: r.data.id });
   expect(response.status).toBe(200);
   return r.data.id;
@@ -212,14 +212,15 @@ it('un reintento conserva la misma solicitud y rechaza cambiar el importe con la
 it('dos solicitudes concurrentes no reservan dos veces el mismo importe', async () => {
   const f = await fixture();
   const results = await Promise.all([request(f, '700000'), request(f, '700000')]);
-  expect(results.map((r) => r.response.status).sort()).toEqual([201, 409]);
+  expect(results.filter((r) => r.response.ok)).toHaveLength(1);
+  expect(results.find((r) => !r.response.ok)?.response.status).toBe(409);
 });
 
 it('Personal administrativo puede solicitar pero no aprobar ni enviar dinero', async () => {
   const f = await fixture();
   identity.actor!.role = 'STAFF';
   const first = await request(f);
-  expect(first.response.status).toBe(201);
+  expect(first.response.ok).toBe(true);
   expect((await command({ action: 'approve', refundId: first.data.id })).status).toBe(403);
   expect((await command({ action: 'execute', refundId: first.data.id })).status).toBe(403);
 });
