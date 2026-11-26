@@ -1,4 +1,5 @@
 'use client';
+import { RefundPanel } from '@/modules/payments/ui/refund-panel';
 import type { ReservationSummary } from '@/modules/reservations/application/list-reservations';
 import { ReservationActions } from '@/modules/reservations/ui/reservation-actions';
 import {
@@ -13,11 +14,16 @@ export function ReservationDetails({
   reservation: ReservationSummary;
   onSaved?: () => void;
 }) {
-  const balance = BigInt(r.amount_cents) - BigInt(r.paid_cents);
+  const refunded = BigInt(r.refunded_cents ?? '0');
+  const net = BigInt(r.paid_cents) - refunded;
+  const balance = BigInt(r.amount_cents) - net;
   const amounts = [
     ['Total de la estadía', r.amount_cents],
     ['Importe abonado', r.paid_cents],
   ];
+  if (refunded > 0n) {
+    amounts.push(['Importe devuelto', refunded.toString()], ['Neto recibido', net.toString()]);
+  }
   if (r.status !== 'CANCELLED') {
     amounts.push([
       balance < 0n ? 'Crédito a favor' : 'Saldo pendiente',
@@ -77,6 +83,9 @@ export function ReservationDetails({
         )}
       </section>
       <ReservationActions key={r.id} reservation={r} embedded onSaved={onSaved} />
+      {r.status === 'CANCELLED' && BigInt(r.paid_cents) > 0n && (
+        <RefundPanel key={'refund-' + r.id} reservationId={r.id} />
+      )}
     </div>
   );
 }

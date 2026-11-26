@@ -18,7 +18,7 @@ La experiencia visual aprobada por el cliente se encuentra en **[Figma — Dise�
 | Checkout       | Una unidad por reserva, bloqueo temporal, pago de seña con Mercado Pago Checkout Pro y confirmación verificada         |
 | Mis reservas   | Guest checkout; acceso posterior a una reserva concreta mediante código OTP por email; cuenta opcional                 |
 | Administración | Dashboard, calendario, reservas manuales y telefónicas, alojamientos, tarifas, huéspedes, pagos y consultas de eventos |
-| M1 — Cobranzas | Registro de pagos y comprobantes, enlaces de saldo, recordatorios por correo y gestión manual de devoluciones          |
+| M1 — Cobranzas | Registro de pagos y comprobantes, enlaces de saldo, recordatorios por correo y devoluciones totales o parciales de Mercado Pago con aprobación administrativa          |
 | M2 — Operación | Estados de limpieza, personal de limpieza y pantalla de recepción con actualización periódica                          |
 
 La administración funciona con roles **PLATFORM_ADMIN** (global), **OWNER**, **STAFF** y **CLEANING** (por complejo). Los huéspedes no son miembros del equipo.
@@ -80,6 +80,7 @@ Cada módulo tendrá sólo las carpetas que necesite (`domain`, `application`, `
 - **Checkout de 10 minutos**, con hasta 5 minutos adicionales para verificar un cobro realmente iniciado. Un pago de resultado desconocido se concilia antes de liberar la disponibilidad comprometida.
 - **Vencimiento:** un intento sin pago iniciado pasa a No completada y libera su hold. La búsqueda de disponibilidad, el listado administrativo y la recuperación del checkout ejecutan la limpieza; además se registra la tarea en la outbox para el scheduler. Los pagos iniciados o inciertos requieren conciliación y las reservas confirmadas conservan su asignación.
 - **Anulación administrativa:** Administrador y Personal administrativo pueden anular reservas Por Confirmar o Confirmadas desde el botón rojo Anular en la columna Acciones del listado o desde su modal, con motivo obligatorio y confirmación. Se conserva la reserva y su auditoría, se libera la asignación y se cierra el checkout. La anulación explícita también admite pagos en verificación; conserva los cobros y cualquier acreditación posterior se registra como incidencia para revisión administrativa, sin reabrir la reserva ni devolver dinero automáticamente. La expiración automática sigue protegiendo los pagos inciertos.
+- **Devoluciones de Mercado Pago:** desde el detalle de una reserva anulada se solicita un importe del pago original. Personal administrativo puede solicitar; el Administrador aprueba y confirma el envío al proveedor. Se conserva cada cobro y la devolución sólo se da por realizada con evidencia de Mercado Pago. La anulación no devuelve dinero por sí sola. Ver [operación de devoluciones](./docs/mercadopago-refunds.md).
 - **Precios históricos inmutables:** cotización por noche, tarifa base obligatoria y reglas por ocupación; cambios futuros de tarifas no alteran reservas existentes.
 - **Menores de 4 años:** no se cobran, pero cuentan para la capacidad total.
 - **Seña como condición financiera:** la reserva puede estar confirmada y tener un saldo pendiente; se permiten excepciones administrativas auditadas.
@@ -132,6 +133,10 @@ La aplicación Next.js y sus scripts de desarrollo ya existen. El alcance de cad
 Flujo previsto: rama por tarea → Pull Request → validaciones de formato, lint, tipos, tests y build → revisión → merge. Los despliegues de producción requieren aprobación manual. **Nunca publicar credenciales, tokens o datos reales de huéspedes en commits, ejemplos o logs.**
 
 Leé [AGENTS.md](./AGENTS.md) antes de colaborar mediante agentes de IA.
+
+## Próxima evolución
+
+Incorporar feature flags para habilitar funcionalidades progresivamente por entorno y por complejo. Los controles deben aplicarse tanto en la interfaz como en el servidor y conservar los permisos existentes. Esta entrega no incorpora todavía el sistema de flags.
 
 ## Referencias
 

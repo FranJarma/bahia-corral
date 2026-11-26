@@ -42,3 +42,20 @@ describe('Resumen financiero de una reserva anulada', () => {
     expect(html).toContain('130.000');
   });
 });
+
+it('muestra el importe devuelto y el neto recibido sin perder los centavos', () => {
+  const html = renderToStaticMarkup(
+    createElement(ReservationDetails, {
+      reservation: Object.assign({}, reservation, {
+        amount_cents: '1000000',
+        paid_cents: '1000000',
+        refunded_cents: '1',
+      }),
+    }),
+  );
+  expect(html).toContain('Importe devuelto');
+  expect(html).toContain('0,01');
+  expect(html).toContain('Neto recibido');
+  expect(html).toContain('9.999,99');
+  expect(html).not.toContain('Saldo pendiente');
+});

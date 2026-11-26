@@ -143,6 +143,7 @@ export function ReservationsTable({
               const paid = BigInt(r.paid_cents),
                 total = BigInt(r.amount_cents),
                 isPending = r.status === 'PENDING_CONFIRMATION';
+              const refunded = BigInt(r.refunded_cents ?? '0');
               const canEdit = ['CONFIRMED', 'IN_STAY'].includes(r.status);
               const canPay =
                 paid < total && !['CANCELLED', 'COMPLETED', 'NO_SHOW'].includes(r.status);
@@ -168,7 +169,15 @@ export function ReservationsTable({
                     <p
                       className={`mt-1 text-[10px] ${paid >= total ? 'text-[#176a4f]' : paid > 0 ? 'text-[#1b5c84]' : 'text-[#895b18]'}`}
                     >
-                      {paid >= total ? 'Pago completo' : paid > 0 ? 'Seña recibida' : 'Pendiente'}
+                      {refunded > 0n
+                        ? refunded >= paid
+                          ? 'Devuelto'
+                          : 'Devolución parcial'
+                        : paid >= total
+                          ? 'Pago completo'
+                          : paid > 0
+                            ? 'Seña recibida'
+                            : 'Pendiente'}
                     </p>
                   </td>
                   <td>

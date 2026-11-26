@@ -18,6 +18,7 @@ export type ReservationSummary = {
   status: string;
   amount_cents: string;
   paid_cents: string;
+  refunded_cents?: string;
 };
 export async function listReservations(ctx: TenantContext): Promise<ReservationSummary[]> {
   await releaseExpiredHolds(ctx);
@@ -26,7 +27,8 @@ export async function listReservations(ctx: TenantContext): Promise<ReservationS
       await tx.execute(sql`
     SELECT r.id,r.reference,(g.first_name||' '||g.last_name) as guest_name,g.phone as guest_phone,
     r.checkin::text,r.checkout::text,u.name as unit_name,r.status,q.amount_cents::text,
-    COALESCE((SELECT SUM(p.amount_cents) FROM payments p WHERE p.tenant_id=r.tenant_id AND p.reservation_id=r.id),0)::text as paid_cents
+    COALESCE((SELECT SUM(p.amount_cents) FROM payments p WHERE p.tenant_id=r.tenant_id AND p.reservation_id=r.id),0)::text as paid_cents,
+    COALESCE((SELECT SUM(f.amount_cents) FROM refund_requests f WHERE f.tenant_id=r.tenant_id AND f.reservation_id=r.id AND f.status='EXECUTED'),0)::text as refunded_cents
     FROM reservations r JOIN guests g ON g.tenant_id=r.tenant_id AND g.id=r.guest_id
     JOIN accommodation_units u ON u.tenant_id=r.tenant_id AND u.id=r.unit_id
     JOIN stay_quotes q ON q.tenant_id=r.tenant_id AND q.id=r.quote_id

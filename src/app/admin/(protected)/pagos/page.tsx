@@ -7,6 +7,7 @@ import { PageHeading } from '@/modules/admin/ui/page-heading';
 import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
 import { listReservations } from '@/modules/reservations/application/list-reservations';
+import { formatReservationMoney } from '@/modules/reservations/ui/reservation-format';
 const methodLabels: Record<string, string> = {
   TRANSFER: 'Transferencia',
   CASH: 'Efectivo',
@@ -24,12 +25,13 @@ export default async function PaymentsPage() {
       resultRows<{
         id: string;
         amount_cents: string;
+        refunded_cents: string;
         method: string;
         channel: string;
         reference: string;
       }>(
         await tx.execute(
-          sql`SELECT p.id,p.amount_cents::text,p.method,p.channel,r.reference FROM payments p JOIN reservations r ON r.tenant_id=p.tenant_id AND r.id=p.reservation_id WHERE p.tenant_id=${actor.tenantId} ORDER BY p.verified_at DESC LIMIT 200`,
+          sql`SELECT p.id,p.amount_cents::text,COALESCE((SELECT SUM(f.amount_cents) FROM refund_requests f WHERE f.tenant_id=p.tenant_id AND f.payment_id=p.id AND f.status='EXECUTED'),0)::text AS refunded_cents,p.method,p.channel,r.reference FROM payments p JOIN reservations r ON r.tenant_id=p.tenant_id AND r.id=p.reservation_id WHERE p.tenant_id=${actor.tenantId} ORDER BY p.verified_at DESC LIMIT 200`,
         ),
       ),
   );
@@ -43,11 +45,9 @@ export default async function PaymentsPage() {
     reservation: row.reference,
     method: methodLabels[row.method] ?? 'Otro medio',
     channel: channelLabels[row.channel] ?? row.channel,
-    amount: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(Number(BigInt(row.amount_cents)) / 100),
+    amount: formatReservationMoney(row.amount_cents),
+    refunded: formatReservationMoney(row.refunded_cents),
+    net: formatReservationMoney((BigInt(row.amount_cents) - BigInt(row.refunded_cents)).toString()),
   }));
   return (
     <>
@@ -64,7 +64,9 @@ export default async function PaymentsPage() {
           { key: 'reservation', label: 'Reserva', weight: 'bold' },
           { key: 'method', label: 'Medio' },
           { key: 'channel', label: 'Origen' },
-          { key: 'amount', label: 'Importe', weight: 'bold' },
+          { key: 'amount', label: 'Cobrado', weight: 'bold' },
+          { key: 'refunded', label: 'Devuelto' },
+          { key: 'net', label: 'Neto recibido', weight: 'bold' },
         ]}
         emptyMessage="Todavía no hay pagos registrados."
         searchPlaceholder="Buscar reserva o medio de pago"
