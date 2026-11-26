@@ -34,7 +34,10 @@ function providerFailure(error: unknown) {
       amount_not_refundable: 'Mercado Pago no permite devolver este importe.',
     };
     const definitive =
-      [401, 403, 404].includes(error.status) || Object.hasOwn(messages, error.code);
+      error.status >= 400 &&
+      error.status < 500 &&
+      ![409, 429].includes(error.status) &&
+      ([401, 403, 404].includes(error.status) || Object.hasOwn(messages, error.code));
     return {
       definitive,
       message:

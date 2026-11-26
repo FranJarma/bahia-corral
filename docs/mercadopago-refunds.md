@@ -16,15 +16,15 @@ No se admite reintegrar por esta API pagos manuales, cobros sin referencia verif
 
 ## Estados y dinero
 
-| Estado técnico | Estado mostrado | Comportamiento |
-| --- | --- | --- |
-| REQUESTED | Solicitada | Reserva el importe; espera decisión |
-| APPROVED | Aprobada | Espera confirmación del envío |
-| PROCESSING | En proceso | Se envió o se está enviando al proveedor |
-| UNCERTAIN | En verificación | No se conoce el resultado; bloquea otro envío |
-| EXECUTED | Devuelta | Existe evidencia confirmada del proveedor |
-| FAILED | No realizada | Rechazo definitivo; permite una nueva solicitud |
-| REJECTED | Rechazada | Decisión administrativa, sin envío |
+| Estado técnico | Estado mostrado | Comportamiento                                  |
+| -------------- | --------------- | ----------------------------------------------- |
+| REQUESTED      | Solicitada      | Reserva el importe; espera decisión             |
+| APPROVED       | Aprobada        | Espera confirmación del envío                   |
+| PROCESSING     | En proceso      | Se envió o se está enviando al proveedor        |
+| UNCERTAIN      | En verificación | No se conoce el resultado; bloquea otro envío   |
+| EXECUTED       | Devuelta        | Existe evidencia confirmada del proveedor       |
+| FAILED         | No realizada    | Rechazo definitivo; permite una nueva solicitud |
+| REJECTED       | Rechazada       | Decisión administrativa, sin envío              |
 
 Los importes se calculan en centavos enteros. La suma de solicitudes abiertas y devoluciones confirmadas nunca puede superar el cobro original. Las solicitudes y ejecuciones concurrentes se serializan bloqueando reserva y pago. Una clave de idempotencia persistente evita duplicar la solicitud y la devolución.
 

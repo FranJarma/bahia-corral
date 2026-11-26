@@ -12,14 +12,14 @@ La experiencia visual aprobada por el cliente se encuentra en **[Figma — Dise�
 
 ## Alcance del MVP (Base + M1 + M2)
 
-| Superficie     | Funcionalidades previstas                                                                                              |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Sitio público  | Landing, fichas de seis alojamientos, consulta de disponibilidad y cotización por fechas y ocupantes                   |
-| Checkout       | Una unidad por reserva, bloqueo temporal, pago de seña con Mercado Pago Checkout Pro y confirmación verificada         |
-| Mis reservas   | Guest checkout; acceso posterior a una reserva concreta mediante código OTP por email; cuenta opcional                 |
-| Administración | Dashboard, calendario, reservas manuales y telefónicas, alojamientos, tarifas, huéspedes, pagos y consultas de eventos |
-| M1 — Cobranzas | Registro de pagos y comprobantes, enlaces de saldo, recordatorios por correo y devoluciones totales o parciales de Mercado Pago con aprobación administrativa          |
-| M2 — Operación | Estados de limpieza, personal de limpieza y pantalla de recepción con actualización periódica                          |
+| Superficie     | Funcionalidades previstas                                                                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Sitio público  | Landing, fichas de seis alojamientos, consulta de disponibilidad y cotización por fechas y ocupantes                                                          |
+| Checkout       | Una unidad por reserva, bloqueo temporal, pago de seña con Mercado Pago Checkout Pro y confirmación verificada                                                |
+| Mis reservas   | Guest checkout; acceso posterior a una reserva concreta mediante código OTP por email; cuenta opcional                                                        |
+| Administración | Dashboard, calendario, reservas manuales y telefónicas, alojamientos, tarifas, huéspedes, pagos y consultas de eventos                                        |
+| M1 — Cobranzas | Registro de pagos y comprobantes, enlaces de saldo, recordatorios por correo y devoluciones totales o parciales de Mercado Pago con aprobación administrativa |
+| M2 — Operación | Estados de limpieza, personal de limpieza y pantalla de recepción con actualización periódica                                                                 |
 
 La administración funciona con roles **PLATFORM_ADMIN** (global), **OWNER**, **STAFF** y **CLEANING** (por complejo). Los huéspedes no son miembros del equipo.
 
