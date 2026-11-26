@@ -14,10 +14,12 @@ import { getCheckoutSession } from '@/modules/availability/application/checkout-
 import { releaseExpiredHolds, startCheckout } from '@/modules/availability/application/holds';
 import { searchAvailability } from '@/modules/availability/application/search-availability';
 import { createPaymentRequest } from '@/modules/payments/application/create-payment-request';
+import { applyVerifiedOrder } from '@/modules/payments/application/reconcile-order';
 import { attachGuestToHold } from '@/modules/reservations/application/attach-guest';
 import { confirmReservation } from '@/modules/reservations/application/confirm-reservation';
 import { listReservations } from '@/modules/reservations/application/list-reservations';
 import { modifyReservation } from '@/modules/reservations/application/modify-reservation';
+import { transitionReservation } from '@/modules/reservations/application/transition-reservation';
 
 // El guard de Next.js no se ejecuta fuera de su runtime; la BD y los casos de uso son reales.
 vi.mock('server-only', () => ({}));
@@ -375,4 +377,172 @@ it('el checkout devuelve un conflicto claro y revierte el intento de reservar un
   const [counts] = await db`SELECT count(*)::int AS count FROM stay_quotes
     WHERE tenant_id=${tenantId} AND unit_id=${unitId} AND checkin='2027-08-01'`;
   expect(counts.count).toBe(1);
+});
+
+describe('Anulación administrativa de reservas pendientes', () => {
+  it.each([
+    { status: 'ACTIVE', date: '2027-08-10' },
+    { status: 'VERIFYING', date: '2027-08-12' },
+    { status: 'UNCERTAIN', date: '2027-08-14' },
+  ])(
+    'anula un hold $status, libera la cabaña y conserva el historial',
+    async ({ status, date }) => {
+      const hold = await checkoutAt(date);
+      const reservation = await identify(hold, status.toLowerCase() + '-cancel@example.com');
+      await db`UPDATE reservation_holds SET status=${status},
+      payment_started_at=${status === 'ACTIVE' ? null : new Date()} WHERE id=${hold.holdId}`;
+      await db`INSERT INTO outbox_jobs(tenant_id,kind,entity_id,due_at) VALUES
+      (${tenantId},'BALANCE_REMINDER_48H',${reservation.reservationId},now()),
+      (${tenantId},'LATE_MANUAL_PAYMENT',${reservation.reservationId},now())`;
+      await transitionReservation(
+        checkoutContext(),
+        reservation.reservationId,
+        'CANCELLED',
+        '  Solicitud del huésped  ',
+      );
+      await transitionReservation(
+        checkoutContext(),
+        reservation.reservationId,
+        'CANCELLED',
+        'Reintento de la operación',
+      );
+      const [stored] =
+        await db`SELECT status,guest_id FROM reservations WHERE id=${reservation.reservationId}`;
+      expect(stored.status).toBe('CANCELLED');
+      const [storedHold] =
+        await db`SELECT status,checkout_token_hash FROM reservation_holds WHERE id=${hold.holdId}`;
+      expect(storedHold.status).toBe('REJECTED');
+      expect(storedHold.checkout_token_hash).toBeNull();
+      const [allocation] =
+        await db`SELECT active FROM inventory_allocations WHERE hold_id=${hold.holdId}`;
+      expect(allocation.active).toBe(false);
+      const audit =
+        await db`SELECT reason FROM audit_events WHERE entity_id=${reservation.reservationId} AND action='CANCELLED'`;
+      expect(audit).toHaveLength(1);
+      expect(audit[0].reason).toBe('Solicitud del huésped');
+      const jobs =
+        await db`SELECT kind,status FROM outbox_jobs WHERE entity_id=${reservation.reservationId}`;
+      expect(jobs.find((j) => j.kind === 'BALANCE_REMINDER_48H')?.status).toBe('CANCELLED');
+      expect(jobs.find((j) => j.kind === 'LATE_MANUAL_PAYMENT')?.status).toBe('PENDING');
+      expect(await getCheckoutSession(checkoutContext(), hold.checkoutToken)).toBeNull();
+      await releaseExpiredHolds(checkoutContext());
+      const rows = await listReservations(checkoutContext());
+      expect(rows.find((r) => r.id === reservation.reservationId)?.status).toBe('CANCELLED');
+      const next = await identify(
+        await checkoutAt(date),
+        status.toLowerCase() + '-cancel@example.com',
+      );
+      const [newReservation] =
+        await db`SELECT guest_id FROM reservations WHERE id=${next.reservationId}`;
+      expect(next.reservationId).not.toBe(reservation.reservationId);
+      expect(newReservation.guest_id).toBe(stored.guest_id);
+    },
+  );
+
+  it('exige un motivo real antes de anular', async () => {
+    const hold = await checkoutAt('2027-08-16');
+    const reservation = await identify(hold, 'cancel-reason@example.com');
+    for (const reason of [undefined, '', '   ', 'ab']) {
+      await expect(
+        transitionReservation(checkoutContext(), reservation.reservationId, 'CANCELLED', reason),
+      ).rejects.toThrow(/motivo/i);
+    }
+    const [stored] =
+      await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
+    expect(stored.status).toBe('PENDING_CONFIRMATION');
+    const [allocation] =
+      await db`SELECT active FROM inventory_allocations WHERE hold_id=${hold.holdId}`;
+    expect(allocation.active).toBe(true);
+  });
+
+  it('no permite anular una reserva de otro complejo', async () => {
+    const hold = await checkoutAt('2027-08-18');
+    const reservation = await identify(hold, 'cancel-isolation@example.com');
+    const [other] =
+      await db`INSERT INTO tenants(slug,name) VALUES('other-cancellation','Otro complejo') RETURNING id`;
+    await expect(
+      transitionReservation(
+        { ...checkoutContext(), tenantId: other.id },
+        reservation.reservationId,
+        'CANCELLED',
+        'Sin acceso',
+      ),
+    ).rejects.toThrow();
+    const [stored] =
+      await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
+    expect(stored.status).toBe('PENDING_CONFIRMATION');
+  });
+
+  it('registra una acreditación tardía una sola vez sin reactivar la reserva anulada', async () => {
+    const hold = await checkoutAt('2027-08-20');
+    const reservation = await identify(hold, 'cancel-late-payment@example.com');
+    const orderId = 'cancel-late-' + randomUUID();
+    await db`INSERT INTO payment_requests(tenant_id,reservation_id,quote_id,amount_cents,purpose,provider_order_id,status)
+      VALUES(${tenantId},${reservation.reservationId},${hold.quoteId},7000000,'DEPOSIT',${orderId},'PROCESSING')`;
+    await db`UPDATE reservation_holds SET status='VERIFYING',payment_started_at=now() WHERE id=${hold.holdId}`;
+    await transitionReservation(
+      checkoutContext(),
+      reservation.reservationId,
+      'CANCELLED',
+      'Solicitud administrativa',
+    );
+    const order = {
+      id: orderId,
+      status: 'APPROVED' as const,
+      amountCents: 7000000n,
+      paymentId: randomUUID(),
+      paymentMethod: 'CREDIT',
+    };
+    expect(await applyVerifiedOrder(checkoutContext(), order)).toBe('CONFLICT');
+    expect(await applyVerifiedOrder(checkoutContext(), order)).toBe('CONFLICT');
+    await applyVerifiedOrder(checkoutContext(), { ...order, status: 'PROCESSING' });
+    const [stored] =
+      await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
+    expect(stored.status).toBe('CANCELLED');
+    const [payment] =
+      await db`SELECT count(*)::int AS count,sum(amount_cents)::text AS amount FROM payments WHERE reservation_id=${reservation.reservationId}`;
+    expect(payment.count).toBe(1);
+    expect(payment.amount).toBe('7000000');
+    const [request] =
+      await db`SELECT status FROM payment_requests WHERE provider_order_id=${orderId}`;
+    expect(request.status).toBe('APPROVED');
+    const [allocation] = await db`SELECT count(*)::int AS count FROM inventory_allocations
+      WHERE active AND (hold_id=${hold.holdId} OR reservation_id=${reservation.reservationId})`;
+    expect(allocation.count).toBe(0);
+    const incidents =
+      await db`SELECT id FROM outbox_jobs WHERE entity_id=${reservation.reservationId} AND kind='PAYMENT_AFTER_CANCELLATION'`;
+    expect(incidents).toHaveLength(1);
+  });
+
+  it('serializa la anulación y la acreditación concurrentes sin perder el pago', async () => {
+    const hold = await checkoutAt('2027-08-22');
+    const reservation = await identify(hold, 'cancel-race@example.com');
+    const orderId = 'cancel-race-' + randomUUID();
+    await db`INSERT INTO payment_requests(tenant_id,reservation_id,quote_id,amount_cents,purpose,provider_order_id)
+      VALUES(${tenantId},${reservation.reservationId},${hold.quoteId},7000000,'DEPOSIT',${orderId})`;
+    await Promise.all([
+      transitionReservation(
+        checkoutContext(),
+        reservation.reservationId,
+        'CANCELLED',
+        'Anulación concurrente',
+      ),
+      applyVerifiedOrder(checkoutContext(), {
+        id: orderId,
+        status: 'APPROVED',
+        amountCents: 7000000n,
+        paymentId: randomUUID(),
+        paymentMethod: 'CREDIT',
+      }),
+    ]);
+    const [stored] =
+      await db`SELECT status FROM reservations WHERE id=${reservation.reservationId}`;
+    expect(stored.status).toBe('CANCELLED');
+    const [allocation] = await db`SELECT count(*)::int AS count FROM inventory_allocations
+      WHERE active AND (hold_id=${hold.holdId} OR reservation_id=${reservation.reservationId})`;
+    expect(allocation.count).toBe(0);
+    const [payment] =
+      await db`SELECT count(*)::int AS count FROM payments WHERE reservation_id=${reservation.reservationId}`;
+    expect(payment.count).toBe(1);
+  });
 });
