@@ -40,9 +40,9 @@ function providerFailure(error: unknown) {
       ([401, 403, 404].includes(error.status) || Object.hasOwn(messages, error.code));
     return {
       definitive,
-      message:
-        messages[error.code] ??
-        'El resultado de Mercado Pago necesita verificación. Consultá el estado antes de volver a operar.',
+      message: definitive
+        ? (messages[error.code] ?? 'Mercado Pago rechazó la devolución antes de realizarla.')
+        : 'El resultado de Mercado Pago necesita verificación. Consultá el estado antes de volver a operar.',
     };
   }
   return {

@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.skip(process.env.E2E_TEST_DATABASE !== '1', 'Sólo opera sobre pagos simulados de CI');
 test.setTimeout(90_000);
+test.use({ actionTimeout: 15_000, navigationTimeout: 30_000 });
 for (const width of [1280, 390]) {
   test(
     'solicita, aprueba y devuelve por Mercado Pago a ' + width + 'px',
@@ -30,7 +31,7 @@ for (const width of [1280, 390]) {
       const detail = page.getByRole('dialog', { name: 'Reserva ' + reference, exact: true });
       const form = detail.getByRole('form', { name: 'Solicitar devolución', exact: true });
       await expect(form).toBeVisible();
-      await form.getByLabel('Tipo de devolución', { exact: true }).selectOption('PARTIAL');
+      await form.getByRole('combobox', { name: 'Tipo de devolución', exact: true }).selectOption('PARTIAL');
       await form.getByLabel('Importe a devolver (ARS)', { exact: false }).fill('40000');
       await form
         .getByLabel('Motivo de la devolución', { exact: false })
