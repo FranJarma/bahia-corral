@@ -102,7 +102,12 @@ async function fixture(provider = 'MERCADO_PAGO', status = 'CANCELLED') {
 type Fixture = Awaited<ReturnType<typeof fixture>>;
 function providerFor(
   f: Fixture,
-  options: { pending?: boolean; timeoutAfterCommit?: boolean; decline?: boolean; serverErrorAfterCommit?: boolean } = {},
+  options: {
+    pending?: boolean;
+    timeoutAfterCommit?: boolean;
+    decline?: boolean;
+    serverErrorAfterCommit?: boolean;
+  } = {},
 ) {
   vi.stubEnv('MERCADO_PAGO_ACCESS_TOKEN', 'integration-refund-token');
   const refunds: { id: string; transaction_id: string; amount: string; status: string }[] = [];
@@ -132,7 +137,10 @@ function providerFor(
         status: options.pending ? 'processing' : 'processed',
       });
       if (options.serverErrorAfterCommit)
-        return new Response(JSON.stringify({errors:[{code:'insufficient_money_for_refund'}]}),{status:503});
+        return new Response(
+          JSON.stringify({ errors: [{ code: 'insufficient_money_for_refund' }] }),
+          { status: 503 },
+        );
       if (options.timeoutAfterCommit)
         throw new DOMException('Timeout simulado después del reintegro', 'TimeoutError');
     }
@@ -337,43 +345,63 @@ it('no permite operar una devolución de otro complejo ni simular una ejecución
 });
 
 it('un error 5xx conserva el importe protegido aunque incluya un código de rechazo', async () => {
-  const f=await fixture(), remote=providerFor(f,{serverErrorAfterCommit:true}), id=await approved(f);
-  expect((await command({action:'execute',refundId:id})).status).toBe(202);
-  expect((await request(f,'1000000')).response.status).toBe(409);
-  expect((await command({action:'reconcile',refundId:id})).status).toBe(200);
+  const f = await fixture(),
+    remote = providerFor(f, { serverErrorAfterCommit: true }),
+    id = await approved(f);
+  expect((await command({ action: 'execute', refundId: id })).status).toBe(202);
+  expect((await request(f, '1000000')).response.status).toBe(409);
+  expect((await command({ action: 'reconcile', refundId: id })).status).toBe(200);
   expect(remote.sent).toHaveLength(1);
-  const [done]=await db`SELECT status FROM refund_requests WHERE id=${id}`;
+  const [done] = await db`SELECT status FROM refund_requests WHERE id=${id}`;
   expect(done.status).toBe('EXECUTED');
 });
 
 it('importa reintegros externos una sola vez y no degrada un resultado confirmado', async () => {
-  const f=await fixture();
-  const context={tenantId,actorId:'refund-test',actorType:'SYSTEM' as const};
-  const evidence={id:'REF_EXTERNAL_'+randomUUID().replaceAll('-',''),transactionId:f.transactionId,amountCents:600000n,status:'EXECUTED' as const};
-  await reconcileRefundEvidence(context,f.orderId,[evidence]);
-  await reconcileRefundEvidence(context,f.orderId,[evidence]);
-  await reconcileRefundEvidence(context,f.orderId,[{...evidence,status:'PROCESSING'}]);
-  expect((await request(f,'400001')).response.status).toBe(409);
-  expect((await request(f,'400000')).response.status).toBe(201);
-  const rows=await db`SELECT status,source FROM refund_requests WHERE payment_id=${f.paymentId} AND provider_refund_id=${evidence.id}`;
-  expect(rows).toEqual([{status:'EXECUTED',source:'PROVIDER'}]);
+  const f = await fixture();
+  const context = { tenantId, actorId: 'refund-test', actorType: 'SYSTEM' as const };
+  const evidence = {
+    id: 'REF_EXTERNAL_' + randomUUID().replaceAll('-', ''),
+    transactionId: f.transactionId,
+    amountCents: 600000n,
+    status: 'EXECUTED' as const,
+  };
+  await reconcileRefundEvidence(context, f.orderId, [evidence]);
+  await reconcileRefundEvidence(context, f.orderId, [evidence]);
+  await reconcileRefundEvidence(context, f.orderId, [{ ...evidence, status: 'PROCESSING' }]);
+  expect((await request(f, '400001')).response.status).toBe(409);
+  expect((await request(f, '400000')).response.status).toBe(201);
+  const rows =
+    await db`SELECT status,source FROM refund_requests WHERE payment_id=${f.paymentId} AND provider_refund_id=${evidence.id}`;
+  expect(rows).toEqual([{ status: 'EXECUTED', source: 'PROVIDER' }]);
 });
 
 it('no aplica evidencia cuyo importe difiere de una devolución previamente asociada', async () => {
-  const f=await fixture(),remote=providerFor(f,{pending:true}),id=await approved(f);
-  expect((await command({action:'execute',refundId:id})).status).toBe(202);
-  remote.refunds[0].amount='5000.00';
-  expect((await command({action:'reconcile',refundId:id})).status).toBe(409);
-  const [stored]=await db`SELECT status,amount_cents::text FROM refund_requests WHERE id=${id}`;
-  expect(stored).toEqual({status:'PROCESSING',amount_cents:'400000'});
-  expect((await request(f,'100000')).response.status).toBe(409);
+  const f = await fixture(),
+    remote = providerFor(f, { pending: true }),
+    id = await approved(f);
+  expect((await command({ action: 'execute', refundId: id })).status).toBe(202);
+  remote.refunds[0].amount = '5000.00';
+  expect((await command({ action: 'reconcile', refundId: id })).status).toBe(409);
+  const [stored] = await db`SELECT status,amount_cents::text FROM refund_requests WHERE id=${id}`;
+  expect(stored).toEqual({ status: 'PROCESSING', amount_cents: '400000' });
+  expect((await request(f, '100000')).response.status).toBe(409);
 });
 
 it('rechazar una solicitud requiere motivo y libera el importe sin enviar dinero', async () => {
-  const f=await fixture(),remote=providerFor(f),id=await approved(f);
-  expect((await command({action:'reject',refundId:id,reason:'   '})).status).toBe(400);
-  expect((await command({action:'reject',refundId:id,reason:'Importe no acordado con el huésped'})).status).toBe(200);
-  expect((await command({action:'execute',refundId:id})).status).toBe(200);
+  const f = await fixture(),
+    remote = providerFor(f),
+    id = await approved(f);
+  expect((await command({ action: 'reject', refundId: id, reason: '   ' })).status).toBe(400);
+  expect(
+    (
+      await command({
+        action: 'reject',
+        refundId: id,
+        reason: 'Importe no acordado con el huésped',
+      })
+    ).status,
+  ).toBe(200);
+  expect((await command({ action: 'execute', refundId: id })).status).toBe(200);
   expect(remote.sent).toHaveLength(0);
-  expect((await request(f,'1000000')).response.status).toBe(201);
+  expect((await request(f, '1000000')).response.status).toBe(201);
 });
