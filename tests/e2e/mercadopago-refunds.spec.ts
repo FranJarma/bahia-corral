@@ -31,7 +31,9 @@ for (const width of [1280, 390]) {
       const detail = page.getByRole('dialog', { name: 'Reserva ' + reference, exact: true });
       const form = detail.getByRole('form', { name: 'Solicitar devolución', exact: true });
       await expect(form).toBeVisible();
-      await form.getByRole('combobox', { name: 'Tipo de devolución', exact: true }).selectOption('PARTIAL');
+      await form
+        .getByRole('combobox', { name: 'Tipo de devolución', exact: true })
+        .selectOption('PARTIAL');
       await form.getByLabel('Importe a devolver (ARS)', { exact: false }).fill('40000');
       await form
         .getByLabel('Motivo de la devolución', { exact: false })
