@@ -13,6 +13,7 @@ async function main() {
       '0002-username-login.sql',
       '0003-guest-identity.sql',
       '0004-checkout-contact.sql',
+      '0005-mercadopago-refunds.sql',
     ];
     for (const filename of migrations) {
       const raw = readFileSync(resolve(process.cwd(), 'drizzle', filename), 'utf8');

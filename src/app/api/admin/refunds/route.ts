@@ -1,9 +1,6 @@
-import { sql } from 'drizzle-orm';
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { appendAuditEvent } from '@/infrastructure/audit/append-audit-event';
-import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
 import {
   assertTrustedOrigin,
   failResponse,
@@ -12,73 +9,82 @@ import {
 } from '@/infrastructure/http/route';
 import { getAdminActor } from '@/modules/identity-access/application/admin-actor';
 import { requirePermission } from '@/modules/identity-access/domain/permissions';
+import { getRefundSummary } from '@/modules/payments/application/get-refunds';
+import { executeRefund } from '@/modules/payments/application/refund-execution';
+import { reconcileRefund } from '@/modules/payments/application/refund-reconciliation';
+import { decideRefund, requestRefund } from '@/modules/payments/application/refund-requests';
+import { RefundError } from '@/modules/payments/domain/refund';
 const schema = z.discriminatedUnion('action', [
   z.object({
     action: z.literal('request'),
-    reservationId: z.string().uuid(),
-    amountCents: z.string().regex(/^\d+$/),
-    reason: z.string().min(3),
+    reservationId: z.uuid(),
+    paymentId: z.uuid(),
+    amountCents: z.string().regex(/^[1-9]\d{0,17}$/),
+    reason: z.string().trim().min(3).max(1000),
+    idempotencyKey: z.uuid(),
   }),
-  z.object({ action: z.literal('approve'), refundId: z.string().uuid() }),
-  z.object({ action: z.literal('execute'), refundId: z.string().uuid() }),
+  z.object({ action: z.literal('approve'), refundId: z.uuid() }),
+  z.object({
+    action: z.literal('reject'),
+    refundId: z.uuid(),
+    reason: z.string().trim().min(3).max(1000),
+  }),
+  z.object({ action: z.literal('execute'), refundId: z.uuid() }),
+  z.object({ action: z.literal('reconcile'), refundId: z.uuid() }),
 ]);
+function failure(error: unknown) {
+  if (error instanceof RefundError)
+    return NextResponse.json(
+      { error: error.message, code: error.code },
+      { status: error.code === 'NOT_FOUND' ? 404 : error.code === 'INVALID_INPUT' ? 400 : 409 },
+    );
+  return failResponse(error);
+}
+export async function GET(request: NextRequest) {
+  try {
+    const actor = await getAdminActor();
+    if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    const id = z.uuid().parse(request.nextUrl.searchParams.get('reservationId'));
+    const summary = await getRefundSummary(
+      { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
+      actor.role,
+      id,
+    );
+    return successJson({ summary });
+  } catch (error) {
+    return failure(error);
+  }
+}
 export async function POST(request: NextRequest) {
   try {
     assertTrustedOrigin(request);
     const actor = await getAdminActor();
     if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     const data = await jsonInput(request, schema);
-    requirePermission(
-      actor.role,
-      data.action === 'request' ? 'refunds:request' : 'refunds:approve',
-    );
     const ctx = { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' as const };
-    const result = await runTenantTx(ctx, async (tx) => {
-      if (data.action === 'request') {
-        const [row] = resultRows<{ id: string }>(
-          await tx.execute(sql`INSERT INTO refund_requests(tenant_id,reservation_id,amount_cents,reason,requested_by)
-        VALUES(${actor.tenantId},${data.reservationId},${data.amountCents},${data.reason},${actor.userId}) RETURNING id`),
+    switch (data.action) {
+      case 'request':
+        return successJson(
+          await requestRefund(ctx, actor.role, { ...data, amountCents: BigInt(data.amountCents) }),
+          201,
         );
-        await appendAuditEvent(tx, {
-          tenantId: actor.tenantId,
-          actorId: actor.userId,
-          actorType: 'USER',
-          entity: 'refund',
-          entityId: row.id,
-          action: 'REQUESTED',
-          reason: data.reason,
-          correlationId: row.id,
-        });
-        return row;
+      case 'approve':
+        return successJson(await decideRefund(ctx, actor.role, data.refundId, 'approve'));
+      case 'reject':
+        return successJson(
+          await decideRefund(ctx, actor.role, data.refundId, 'reject', data.reason),
+        );
+      case 'execute': {
+        const result = await executeRefund(ctx, actor.role, data.refundId);
+        return successJson(result, ['PROCESSING', 'UNCERTAIN'].includes(result.status) ? 202 : 200);
       }
-      const [row] = resultRows<{ status: string }>(
-        await tx.execute(
-          sql`SELECT status FROM refund_requests WHERE tenant_id=${actor.tenantId} AND id=${data.refundId} FOR UPDATE`,
-        ),
-      );
-      if (!row) throw new Error('Devolución inexistente');
-      if (data.action === 'approve' && row.status === 'REQUESTED') {
-        await tx.execute(
-          sql`UPDATE refund_requests SET status='APPROVED',approved_by=${actor.userId} WHERE tenant_id=${actor.tenantId} AND id=${data.refundId}`,
-        );
-      } else if (data.action === 'execute' && row.status === 'APPROVED') {
-        await tx.execute(
-          sql`UPDATE refund_requests SET status='EXECUTED',executed_by=${actor.userId},executed_at=now() WHERE tenant_id=${actor.tenantId} AND id=${data.refundId}`,
-        );
-      } else throw new Error('Transición de reintegro inválida');
-      await appendAuditEvent(tx, {
-        tenantId: actor.tenantId,
-        actorId: actor.userId,
-        actorType: 'USER',
-        entity: 'refund',
-        entityId: data.refundId,
-        action: data.action.toUpperCase(),
-        correlationId: data.refundId,
-      });
-      return { id: data.refundId };
-    });
-    return successJson(result);
+      case 'reconcile': {
+        requirePermission(actor.role, 'payments:read');
+        const result = await reconcileRefund(ctx, data.refundId);
+        return successJson(result, ['PROCESSING', 'UNCERTAIN'].includes(result.status) ? 202 : 200);
+      }
+    }
   } catch (error) {
-    return failResponse(error);
+    return failure(error);
   }
 }

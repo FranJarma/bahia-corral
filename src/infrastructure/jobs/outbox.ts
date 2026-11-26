@@ -9,6 +9,7 @@ import {
 import { sendMail } from '@/infrastructure/email/mail-port';
 import { createTriggerJobAdapter, type JobAdapter } from '@/infrastructure/jobs/job-adapter';
 import { releaseExpiredHolds } from '@/modules/availability/application/holds';
+import { reconcileRefund } from '@/modules/payments/application/refund-reconciliation';
 
 export async function dispatchOutbox(
   ctx: TenantContext,
@@ -73,6 +74,7 @@ export async function executeOutboxJob(jobId: string, tenantId: string) {
   if (!job) return;
   try {
     if (job.kind === 'CHECKOUT_EXPIRED') await releaseExpiredHolds(ctx);
+    if (job.kind === 'MERCADO_PAGO_REFUND_SYNC') await reconcileRefund(ctx, job.entity_id);
     if (job.kind.startsWith('BALANCE_REMINDER_') || job.kind === 'RESERVATION_CONFIRMED') {
       const payload = await runTenantTx(ctx, async (tx) => {
         const records = resultRows<{

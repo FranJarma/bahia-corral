@@ -31,6 +31,8 @@ beforeAll(async () => {
   pg = await new PostgreSqlContainer('postgres:16-alpine').start();
   db = postgres(pg.getConnectionUri(), { max: 4, prepare: false });
   await db.unsafe(readFileSync(resolve('drizzle/0001-initial.sql'), 'utf8'));
+  await db.unsafe(readFileSync(resolve('drizzle/0005-mercadopago-refunds.sql'), 'utf8'));
+  await db.unsafe(readFileSync(resolve('drizzle/0005-mercadopago-refunds.sql'), 'utf8'));
   const [tenant] =
     await db`INSERT INTO tenants(slug,name) VALUES('refund-tests','Reintegros de prueba') RETURNING id`;
   tenantId = tenant.id;

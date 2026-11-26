@@ -11,12 +11,18 @@ import {
   type VerifiedOrder,
 } from '@/modules/payments/integrations/mercadopago';
 
+import { reconcileRefundEvidence } from './refund-reconciliation';
+
 /** Recibidor idempotente: ninguna notificación es prueba del dinero hasta consultar Orders API. */
 export async function reconcileMercadoPagoOrder(
   ctx: TenantContext,
   orderId: string,
 ): Promise<'CONFIRMED' | 'PENDING' | 'REJECTED' | 'CONFLICT' | 'IGNORED'> {
   const provider = await createMercadoPagoGateway().getOrder(orderId);
+  if (provider.refunds?.length) {
+    await reconcileRefundEvidence(ctx, provider.id, provider.refunds);
+    return 'IGNORED';
+  }
   return applyVerifiedOrder(ctx, provider);
 }
 
@@ -48,6 +54,7 @@ export async function applyVerifiedOrder(
       WHERE tenant_id=${ctx.tenantId} AND id=${request.reservation_id} FOR UPDATE`),
     );
     if (!reservation) return 'IGNORED';
+    if (provider.status === 'REFUNDED') return 'IGNORED';
     // Una notificación atrasada no puede degradar un cobro ya acreditado.
     if (request.status === 'APPROVED' && provider.status !== 'APPROVED') {
       if (reservation.status === 'CANCELLED') return 'CONFLICT';
