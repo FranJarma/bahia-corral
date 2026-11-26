@@ -8,7 +8,7 @@ export type ReservationStatus =
   | 'NO_SHOW';
 export type BalanceDuePolicy = 'AT_CHECKIN' | 'BEFORE_24H';
 const allowed: Record<ReservationStatus, readonly ReservationStatus[]> = {
-  PENDING_CONFIRMATION: ['CONFIRMED', 'NOT_COMPLETED'],
+  PENDING_CONFIRMATION: ['CONFIRMED', 'NOT_COMPLETED', 'CANCELLED'],
   CONFIRMED: ['IN_STAY', 'CANCELLED', 'NO_SHOW'],
   IN_STAY: ['COMPLETED'],
   COMPLETED: [],

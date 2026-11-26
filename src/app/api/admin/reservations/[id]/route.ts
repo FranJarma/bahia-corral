@@ -18,7 +18,7 @@ const command = z.discriminatedUnion('action', [
   z.object({ action: z.literal('confirm-exception'), reason: z.string().trim().min(3) }),
   z.object({ action: z.literal('checkin') }),
   z.object({ action: z.literal('checkout') }),
-  z.object({ action: z.literal('cancel'), reason: z.string().min(3) }),
+  z.object({ action: z.literal('cancel'), reason: z.string().trim().min(3) }),
   z.object({ action: z.literal('no-show'), reason: z.string().min(3) }),
   z.object({
     action: z.literal('modify'),
@@ -49,7 +49,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const actor = await getAdminActor();
     if (!actor) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     requirePermission(actor.role, 'reservations:write');
-    const { id } = await params;
+    const id = z.uuid().parse((await params).id);
     const body = await jsonInput(request, command);
     const ctx = { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' as const };
     switch (body.action) {

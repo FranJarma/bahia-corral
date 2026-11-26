@@ -48,6 +48,11 @@ export async function applyVerifiedOrder(
       WHERE tenant_id=${ctx.tenantId} AND id=${request.reservation_id} FOR UPDATE`),
     );
     if (!reservation) return 'IGNORED';
+    // Una notificación atrasada no puede degradar un cobro ya acreditado.
+    if (request.status === 'APPROVED' && provider.status !== 'APPROVED') {
+      if (reservation.status === 'CANCELLED') return 'CONFLICT';
+      return reservation.status === 'PENDING_CONFIRMATION' ? 'PENDING' : 'CONFIRMED';
+    }
     if (provider.status === 'PROCESSING' || provider.status === 'UNKNOWN') {
       await tx.execute(
         sql`UPDATE payment_requests SET status='PROCESSING' WHERE tenant_id=${ctx.tenantId} AND id=${request.id}`,
@@ -55,7 +60,7 @@ export async function applyVerifiedOrder(
       await tx.execute(sql`UPDATE reservation_holds SET status='VERIFYING',payment_started_at=COALESCE(payment_started_at,now()),
         verification_deadline=COALESCE(verification_deadline,expires_at+interval '5 minutes')
         WHERE tenant_id=${ctx.tenantId} AND reservation_id=${request.reservation_id} AND status='ACTIVE'`);
-      return 'PENDING';
+      return reservation.status === 'CANCELLED' ? 'CONFLICT' : 'PENDING';
     }
     if (provider.status === 'REJECTED') {
       await tx.execute(
@@ -98,6 +103,24 @@ export async function applyVerifiedOrder(
         action: 'PAYMENT_VERIFIED',
         correlationId: request.id,
       });
+    }
+    if (reservation.status === 'CANCELLED') {
+      if (saved.length > 0) {
+        await tx.execute(sql`INSERT INTO outbox_jobs(tenant_id,kind,entity_id,due_at,payload)
+          VALUES(${ctx.tenantId},'PAYMENT_AFTER_CANCELLATION',${request.reservation_id},now(),
+            ${JSON.stringify({ orderId: provider.id, paymentId: saved[0].id })}::jsonb)`);
+        await appendAuditEvent(tx, {
+          tenantId: ctx.tenantId,
+          actorId: 'mercadopago',
+          actorType: 'PROVIDER',
+          entity: 'payment',
+          entityId: saved[0].id,
+          action: 'PAYMENT_AFTER_CANCELLATION',
+          reason: 'Cobro acreditado después de la anulación; requiere revisión administrativa.',
+          correlationId: request.id,
+        });
+      }
+      return 'CONFLICT';
     }
     if (reservation.status !== 'PENDING_CONFIRMATION') return 'CONFIRMED';
     const [quote] = resultRows<{ deposit_cents: string }>(

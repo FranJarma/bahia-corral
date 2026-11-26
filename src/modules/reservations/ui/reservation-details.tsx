@@ -62,11 +62,18 @@ export function ReservationDetails({
             </div>
           ))}
         </dl>
+        {r.status === 'CANCELLED' && (
+          <p className="mt-4 text-sm leading-6 text-muted">
+            La reserva está anulada y el alojamiento vuelve a estar disponible.
+            {BigInt(r.paid_cents) > 0n &&
+              ' El importe abonado se conserva; cualquier devolución se gestiona por separado.'}
+          </p>
+        )}
         {r.status === 'NOT_COMPLETED' && (
           <p className="mt-4 text-sm leading-6 text-muted">Esta reserva no llegó a confirmarse.</p>
         )}
       </section>
-      <ReservationActions reservationId={r.id} status={r.status} embedded onSaved={onSaved} />
+      <ReservationActions key={r.id} reservation={r} embedded onSaved={onSaved} />
     </div>
   );
 }
