@@ -353,12 +353,21 @@ it('reutilizar un correo no revela el teléfono ni el nombre del contacto anteri
 });
 
 it('el checkout devuelve un conflicto claro y revierte el intento de reservar una unidad bloqueada', async () => {
-  const payload = { unitId, checkin: '2027-08-01', checkout: '2027-08-02', adults: 2, childAges: [] };
+  const payload = {
+    unitId,
+    checkin: '2027-08-01',
+    checkout: '2027-08-02',
+    adults: 2,
+    childAges: [],
+  };
   await startCheckout(checkoutContext(), payload);
-  const response = await startPublicCheckout(new NextRequest('http://localhost/api/public/checkout/start', {
-    method: 'POST', headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  }));
+  const response = await startPublicCheckout(
+    new NextRequest('http://localhost/api/public/checkout/start', {
+      method: 'POST',
+      headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }),
+  );
   expect(response.status).toBe(409);
   const data = await response.json();
   expect(data.code).toBe('ACCOMMODATION_UNAVAILABLE');
