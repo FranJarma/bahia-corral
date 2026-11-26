@@ -79,3 +79,34 @@ for (const width of [1280, 390]) {
     },
   );
 }
+
+for (const width of [1280, 390]) {
+  test('explica la falta de disponibilidad y permite elegir otra cabaña a ' + width + 'px', async ({ page, baseURL }, info) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.context().setExtraHTTPHeaders({ Origin: baseURL! });
+    const unit = (await (await page.request.get('/api/public/units?slug=cabana-1')).json()).unit;
+    const checkin = width === 1280 ? '2029-09-10' : '2029-09-12';
+    const checkout = width === 1280 ? '2029-09-11' : '2029-09-13';
+    const login = await page.request.post('/api/auth/sign-in/username', { data: {
+      username: process.env.E2E_USERNAME, password: process.env.E2E_PASSWORD,
+    } });
+    expect(login.ok()).toBeTruthy();
+    const blocked = await page.request.post('/api/admin/blocks', { data: {
+      unitId: unit.id, checkin, checkout, reason: 'Bloqueo ficticio de disponibilidad',
+    } });
+    expect(blocked.status(), await blocked.text()).toBe(201);
+    await page.goto('/reservar?alojamiento=cabana-1&checkin=' + checkin + '&checkout=' + checkout);
+    const next = page.getByRole('button', { name: 'Continuar', exact: true }).first();
+    await expect(next).toBeEnabled();
+    await next.click();
+    const alert = page.getByRole('alert');
+    await expect(alert).toContainText('no está disponible');
+    await expect(alert).toContainText('fechas');
+    await expect(alert).not.toContainText('No pudimos completar la operación');
+    await page.screenshot({ path: info.outputPath('alojamiento-no-disponible.png'), fullPage: true });
+    await page.getByRole('combobox', { name: 'Elegir alojamiento', exact: true }).selectOption('cabana-2');
+    await expect(next).toBeEnabled();
+    await next.click();
+    await expect(page.getByRole('heading', { name: 'Tus datos para reservar', exact: true })).toBeVisible();
+  });
+}

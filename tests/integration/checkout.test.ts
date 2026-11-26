@@ -7,6 +7,7 @@ import { NextRequest } from 'next/server';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { POST as startPublicCheckout } from '@/app/api/public/checkout/start/route';
 import { POST as verifyGuestOtp } from '@/app/api/public/otp/verify/route';
 import { getSqlClient } from '@/infrastructure/db/client';
 import { getCheckoutSession } from '@/modules/availability/application/checkout-session';
@@ -349,4 +350,20 @@ it('reutilizar un correo no revela el teléfono ni el nombre del contacto anteri
     await db`SELECT first_name,phone FROM guests WHERE email='privacy@example.com' AND merged_into_id IS NULL`;
   expect(stored.first_name).toBe('Contacto');
   expect(stored.phone).toBe('3871111111');
+});
+
+it('el checkout devuelve un conflicto claro y revierte el intento de reservar una unidad bloqueada', async () => {
+  const payload = { unitId, checkin: '2027-08-01', checkout: '2027-08-02', adults: 2, childAges: [] };
+  await startCheckout(checkoutContext(), payload);
+  const response = await startPublicCheckout(new NextRequest('http://localhost/api/public/checkout/start', {
+    method: 'POST', headers: { origin: 'http://localhost', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  }));
+  expect(response.status).toBe(409);
+  const data = await response.json();
+  expect(data.code).toBe('ACCOMMODATION_UNAVAILABLE');
+  expect(data.error).toMatch(/no está disponible/);
+  const [counts] = await db`SELECT count(*)::int AS count FROM stay_quotes
+    WHERE tenant_id=${tenantId} AND unit_id=${unitId} AND checkin='2027-08-01'`;
+  expect(counts.count).toBe(1);
 });
