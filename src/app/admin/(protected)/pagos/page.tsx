@@ -1,0 +1,76 @@
+import { sql } from 'drizzle-orm';
+
+import { resultRows, runTenantTx } from '@/infrastructure/db/tenant-transaction';
+import { AdminRecordsTable } from '@/modules/admin/ui/admin-records-table';
+import { ManualPaymentForm } from '@/modules/admin/ui/manual-payment-form';
+import { PageHeading } from '@/modules/admin/ui/page-heading';
+import { requireAdminActor } from '@/modules/identity-access/application/admin-actor';
+import { requirePermission } from '@/modules/identity-access/domain/permissions';
+import { listReservations } from '@/modules/reservations/application/list-reservations';
+import { formatReservationMoney } from '@/modules/reservations/ui/reservation-format';
+const methodLabels: Record<string, string> = {
+  TRANSFER: 'Transferencia',
+  CASH: 'Efectivo',
+  DEBIT: 'Débito',
+  CREDIT: 'Crédito',
+  MERCADO_PAGO: 'Mercado Pago',
+};
+const channelLabels: Record<string, string> = { WEB: 'Web', MANUAL: 'Manual' };
+export default async function PaymentsPage() {
+  const actor = await requireAdminActor();
+  requirePermission(actor.role, 'payments:read');
+  const rows = await runTenantTx(
+    { tenantId: actor.tenantId, actorId: actor.userId, actorType: 'USER' },
+    async (tx) =>
+      resultRows<{
+        id: string;
+        amount_cents: string;
+        refunded_cents: string;
+        method: string;
+        channel: string;
+        reference: string;
+      }>(
+        await tx.execute(
+          sql`SELECT p.id,p.amount_cents::text,COALESCE((SELECT SUM(f.amount_cents) FROM refund_requests f WHERE f.tenant_id=p.tenant_id AND f.payment_id=p.id AND f.status='EXECUTED'),0)::text AS refunded_cents,p.method,p.channel,r.reference FROM payments p JOIN reservations r ON r.tenant_id=p.tenant_id AND r.id=p.reservation_id WHERE p.tenant_id=${actor.tenantId} ORDER BY p.verified_at DESC LIMIT 200`,
+        ),
+      ),
+  );
+  const reservations = await listReservations({
+    tenantId: actor.tenantId,
+    actorId: actor.userId,
+    actorType: 'USER',
+  });
+  const mapped = rows.map((row) => ({
+    id: row.id,
+    reservation: row.reference,
+    method: methodLabels[row.method] ?? 'Otro medio',
+    channel: channelLabels[row.channel] ?? row.channel,
+    amount: formatReservationMoney(row.amount_cents),
+    refunded: formatReservationMoney(row.refunded_cents),
+    net: formatReservationMoney((BigInt(row.amount_cents) - BigInt(row.refunded_cents)).toString()),
+  }));
+  return (
+    <>
+      <PageHeading
+        title="Gestión de pagos"
+        subtitle="Consultá ingresos registrados y asociá cobros manuales a las reservas."
+      />
+      <div className="mb-7">
+        <ManualPaymentForm reservations={reservations} />
+      </div>
+      <AdminRecordsTable
+        rows={mapped}
+        columns={[
+          { key: 'reservation', label: 'Reserva', weight: 'bold' },
+          { key: 'method', label: 'Medio' },
+          { key: 'channel', label: 'Origen' },
+          { key: 'amount', label: 'Cobrado', weight: 'bold' },
+          { key: 'refunded', label: 'Devuelto' },
+          { key: 'net', label: 'Neto recibido', weight: 'bold' },
+        ]}
+        emptyMessage="Todavía no hay pagos registrados."
+        searchPlaceholder="Buscar reserva o medio de pago"
+      />
+    </>
+  );
+}

@@ -45,6 +45,14 @@ Este archivo aplica a todos los agentes y colaboradores de este repositorio. Lee
 - No convertir convenciones estilísticas en capas innecesarias. Un componente sencillo puede ser un archivo sencillo.
 - **No subir artefactos locales**: `.env*` con secretos, `node_modules`, `.next`, cobertura, logs, binarios accidentales o datos privados.
 
+### Formularios obligatorios
+
+- Usar `ValidatedLabel` en los campos con validación nativa; **los requeridos llevan asterisco rojo**, y al dejar un campo inválido o intentar enviarlo debe aparecer un **mensaje rojo debajo de su control**.
+- Las contraseñas deben usar `PasswordInput` con alternancia mostrar/ocultar; respetar autocompletado, teclado, foco y acceso por lector de pantalla.
+- Mantener la validación de negocio en servidor: los mensajes del frontend **no sustituyen** Zod, permisos ni validaciones del dominio.
+- Los filtros de catálogo y las fechas del buscador público deben conservar el diseño aprobado en Figma, sin iconos superpuestos ni textos truncados.
+- Las imágenes y favicon derivados del logo se generan desde `public/images/logo-bahia-corral.png` mediante `scripts/generate-favicons.py`; no sustituir el logo aprobado.
+
 ## 5. Seguridad, datos e invariantes
 
 - Neon PostgreSQL + Drizzle. Toda operación sobre datos del complejo debe tener contexto `tenant_id` fiable y aplicar RLS, junto con autorización del caso de uso.

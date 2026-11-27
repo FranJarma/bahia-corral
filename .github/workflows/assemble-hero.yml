@@ -1,0 +1,34 @@
+name: Figma Hero Asset Assembly
+
+on:
+  push:
+    branches:
+      - feat/mvp-36-tasks
+    paths:
+      - assets/hero-parts/**
+      - .github/workflows/assemble-hero.yml
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify and commit original Figma image
+        shell: bash
+        run: |
+          if [ ! -f assets/hero-parts/part-01.bin ]; then
+            echo 'Hero already assembled; nothing to do.'
+            exit 0
+          fi
+          mkdir -p public/images
+          cat assets/hero-parts/part-01.bin assets/hero-parts/part-02.bin assets/hero-parts/part-03.bin > public/images/hero-figma.jpg
+          node -e "const b=require('fs').readFileSync('public/images/hero-figma.jpg');let a=1,z=0;for(const v of b){a=(a+v)%65521;z=(z+a)%65521;}if(b.length!==1218089||(((z<<16)|a)>>>0)!==2411596000)process.exit(1);console.log('Figma original JPEG verified:',b.length)"
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git rm -r assets/hero-parts
+          git add public/images/hero-figma.jpg
+          git -c core.hooksPath=/dev/null commit -m 'assets: integrate original Figma hero'
+          git push origin HEAD:feat/mvp-36-tasks

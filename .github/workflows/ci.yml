@@ -1,0 +1,98 @@
+name: Calidad y tests
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  push:
+    branches: ['feat/**']
+permissions:
+  contents: write
+
+jobs:
+  quality:
+    name: Lint, tipos y pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Ordenar imports y aplicar convenciones
+        run: npm run lint:fix || true
+      - name: Formatear fuentes con Prettier
+        run: npm run format
+      - name: Guardar correcciones mecánicas en la rama de trabajo
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/heads/feat/')
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src tests scripts package.json package-lock.json *.config.* .github/workflows/ci.yml
+          if ! git diff --cached --quiet; then
+            git commit -m 'style: format and sort source automatically [skip ci]'
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run typecheck
+      - run: npm run test:unit
+      - run: npm run build
+        env:
+          # La compilación no debe necesitar acceso a producción.
+          NEXT_TELEMETRY_DISABLED: '1'
+  integration:
+    name: PostgreSQL real y RLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npm run test:integration
+
+  e2e:
+    name: Flujos administrativos y responsive
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: bahia_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/bahia_e2e
+      DATABASE_MIGRATION_URL: postgresql://postgres:postgres@127.0.0.1:5432/bahia_e2e
+      BETTER_AUTH_URL: http://localhost:3000
+      BETTER_AUTH_SECRET: e2e-only-secret-not-for-production-32-characters
+      NEXT_PUBLIC_SITE_URL: http://localhost:3000
+      BAHIA_DEFAULT_TENANT_SLUG: bahia-corral
+      E2E_TEST_DATABASE: '1'
+      E2E_USERNAME: e2e_admin
+      E2E_PASSWORD: E2e-only-test-password-42
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - run: npm run db:migrate
+      - run: npm run db:seed
+      - run: npx tsx scripts/seed-e2e.ts
+      - run: npm run test:e2e -- --workers=2 --reporter=line,html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: admin-browser-checks
+          path: |
+            playwright-report
+            test-results
+          retention-days: 3
