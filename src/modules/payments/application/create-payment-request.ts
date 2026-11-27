@@ -8,7 +8,10 @@ import {
   runTenantTx,
   type TenantContext,
 } from '@/infrastructure/db/tenant-transaction';
-import { createMercadoPagoGateway } from '@/modules/payments/integrations/mercadopago';
+import {
+  createMercadoPagoGateway,
+  isDefiniteCheckoutRejection,
+} from '@/modules/payments/integrations/mercadopago';
 
 export async function createPaymentRequest(
   ctx: TenantContext,
@@ -62,25 +65,82 @@ export async function createPaymentRequest(
         ? remaining
         : BigInt(reservation.deposit_cents) - BigInt(paid.total);
     if (amount <= 0n) throw new Error('El importe requerido ya se encuentra cubierto');
+    const [existing] = resultRows<{
+      id: string;
+      amount_cents: string;
+      checkout_url: string | null;
+      status: string;
+    }>(
+      await tx.execute(sql`
+      SELECT id,amount_cents::text,checkout_url,status FROM payment_requests
+      WHERE tenant_id=${ctx.tenantId} AND reservation_id=${input.reservationId}
+        AND status NOT IN ('REJECTED','EXPIRED')
+      ORDER BY created_at DESC LIMIT 1`),
+    );
+    if (existing) {
+      if (
+        existing.checkout_url &&
+        existing.status === 'CREATED' &&
+        BigInt(existing.amount_cents) === amount
+      ) {
+        return {
+          kind: 'EXISTING' as const,
+          requestId: existing.id,
+          checkoutUrl: existing.checkout_url,
+        };
+      }
+      throw new Error(
+        'El checkout tiene un pago iniciado o se está verificando. No inicies otro pago; contactá al complejo para consultar el estado.',
+      );
+    }
     const requestId = randomUUID();
     await tx.execute(sql`INSERT INTO payment_requests(id,tenant_id,reservation_id,quote_id,amount_cents,purpose)
       VALUES(${requestId},${ctx.tenantId},${input.reservationId},${reservation.quote_id},${amount.toString()},${input.purpose})`);
     return {
+      kind: 'NEW' as const,
       requestId,
+      holdId: hold.id,
       reference: reservation.reference,
       email: reservation.email,
       amount,
       quoteId: reservation.quote_id,
     };
   });
+  if (record.kind === 'EXISTING')
+    return { requestId: record.requestId, checkoutUrl: record.checkoutUrl };
   // No retener una transacción PostgreSQL mientras se espera un proveedor externo.
-  const external = await gateway.createCheckout({
-    idempotencyKey: record.requestId,
-    reservationReference: record.reference,
-    email: record.email,
-    amountCents: record.amount,
-    description: `Reserva ${record.reference} — Bahía Corral`,
-  });
+  let external;
+  try {
+    external = await gateway.createCheckout({
+      idempotencyKey: record.requestId,
+      reservationReference: record.reference,
+      email: record.email,
+      amountCents: record.amount,
+      description: `Reserva ${record.reference} — Bahía Corral`,
+    });
+  } catch (error) {
+    const rejected = isDefiniteCheckoutRejection(error);
+    await runTenantTx(ctx, async (tx) => {
+      // Conciliación bloquea primero el pedido, luego la reserva y finalmente el hold.
+      await tx.execute(sql`SELECT id FROM payment_requests
+        WHERE tenant_id=${ctx.tenantId} AND id=${record.requestId} FOR UPDATE`);
+      await tx.execute(sql`SELECT id FROM reservations
+        WHERE tenant_id=${ctx.tenantId} AND id=${input.reservationId} FOR UPDATE`);
+      await tx.execute(sql`UPDATE payment_requests SET status=${rejected ? 'REJECTED' : 'UNCERTAIN'}
+        WHERE tenant_id=${ctx.tenantId} AND id=${record.requestId}
+          AND provider_order_id IS NULL AND status='CREATED'`);
+      if (rejected)
+        await tx.execute(sql`UPDATE reservation_holds
+        SET status='ACTIVE',payment_started_at=NULL,verification_deadline=NULL
+        WHERE tenant_id=${ctx.tenantId} AND id=${record.holdId} AND status='VERIFYING'
+          AND NOT EXISTS(SELECT 1 FROM payment_requests p
+            WHERE p.tenant_id=${ctx.tenantId} AND p.reservation_id=${input.reservationId}
+              AND p.status NOT IN ('REJECTED','EXPIRED'))
+          AND NOT EXISTS(SELECT 1 FROM payments p
+            WHERE p.tenant_id=${ctx.tenantId} AND p.reservation_id=${input.reservationId})`);
+    });
+    throw error;
+  }
   await runTenantTx(ctx, async (tx) => {
     await tx.execute(
       sql`UPDATE payment_requests SET provider_order_id=${external.id},checkout_url=${external.checkoutUrl},status='CREATED' WHERE tenant_id=${ctx.tenantId} AND id=${record.requestId}`,

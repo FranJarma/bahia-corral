@@ -546,3 +546,91 @@ describe('Anulación administrativa de reservas pendientes', () => {
     expect(payment.count).toBe(1);
   });
 });
+
+describe('inicio de pago frente a errores del proveedor', () => {
+  it('un rechazo de autorización permite reintentar sin dejar el hold en verificación', async () => {
+    vi.stubEnv('MERCADO_PAGO_ACCESS_TOKEN', 'test-provider-token');
+    const hold = await checkoutAt('2027-09-01');
+    const reservation = await identify(hold, 'payment-denied@example.com');
+    vi.stubGlobal('fetch', async () =>
+      Response.json(
+        {
+          code: 'PA_UNAUTHORIZED_RESULT_FROM_POLICIES',
+          message: 'At least one policy returned UNAUTHORIZED.',
+        },
+        { status: 403 },
+      ),
+    );
+    const input = {
+      reservationId: reservation.reservationId,
+      checkoutToken: hold.checkoutToken,
+      purpose: 'DEPOSIT' as const,
+    };
+    try {
+      await expect(createPaymentRequest(checkoutContext(), input)).rejects.toMatchObject({
+        status: 403,
+      });
+      const [stored] =
+        await db`SELECT status,payment_started_at,verification_deadline FROM reservation_holds WHERE id=${hold.holdId}`;
+      expect(stored.status).toBe('ACTIVE');
+      expect(stored.payment_started_at).toBeNull();
+      expect(stored.verification_deadline).toBeNull();
+      const [request] =
+        await db`SELECT status FROM payment_requests WHERE reservation_id=${reservation.reservationId}`;
+      expect(request.status).toBe('REJECTED');
+
+      vi.stubGlobal('fetch', async () =>
+        Response.json(
+          {
+            id: 'ORDTESTRETRY',
+            checkout_url:
+              'https://www.mercadopago.com.ar/checkout/v1/redirect?order_id=ORDTESTRETRY',
+            status: 'created',
+          },
+          { status: 201 },
+        ),
+      );
+      const retry = await createPaymentRequest(checkoutContext(), input);
+      expect(retry.checkoutUrl).toContain('ORDTESTRETRY');
+      const [active] = await db`SELECT status FROM reservation_holds WHERE id=${hold.holdId}`;
+      expect(active.status).toBe('VERIFYING');
+      const again = await createPaymentRequest(checkoutContext(), input);
+      expect(again).toEqual(retry);
+      const [count] =
+        await db`SELECT count(*)::int AS total FROM payment_requests WHERE reservation_id=${reservation.reservationId}`;
+      expect(count.total).toBe(2);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('un resultado incierto conserva la disponibilidad y evita crear un segundo cobro', async () => {
+    vi.stubEnv('MERCADO_PAGO_ACCESS_TOKEN', 'test-provider-token');
+    const hold = await checkoutAt('2027-09-03');
+    const reservation = await identify(hold, 'payment-uncertain@example.com');
+    vi.stubGlobal('fetch', async () => Response.json({ code: 'internal_error' }, { status: 500 }));
+    const input = {
+      reservationId: reservation.reservationId,
+      checkoutToken: hold.checkoutToken,
+      purpose: 'DEPOSIT' as const,
+    };
+    try {
+      await expect(createPaymentRequest(checkoutContext(), input)).rejects.toMatchObject({
+        status: 500,
+      });
+      const [stored] =
+        await db`SELECT status,payment_started_at FROM reservation_holds WHERE id=${hold.holdId}`;
+      expect(stored.status).toBe('VERIFYING');
+      expect(stored.payment_started_at).not.toBeNull();
+      await expect(createPaymentRequest(checkoutContext(), input)).rejects.toThrow(/verificando/i);
+      const [count] =
+        await db`SELECT count(*)::int AS total FROM payment_requests WHERE reservation_id=${reservation.reservationId}`;
+      expect(count.total).toBe(1);
+      const [request] =
+        await db`SELECT status FROM payment_requests WHERE reservation_id=${reservation.reservationId}`;
+      expect(request.status).toBe('UNCERTAIN');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});

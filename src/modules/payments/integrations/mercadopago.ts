@@ -50,6 +50,12 @@ export class MercadoPagoApiError extends Error {
     super('Mercado Pago no pudo completar la solicitud.');
   }
 }
+
+/** Estos errores de creación confirman que el proveedor rechazó la solicitud antes de crear una order. */
+export function isDefiniteCheckoutRejection(error: unknown): error is MercadoPagoApiError {
+  return error instanceof MercadoPagoApiError && [400, 401, 403, 404, 422].includes(error.status);
+}
+
 export type PaymentGateway = RefundGateway & {
   createCheckout(input: CreateOrderInput): Promise<MercadoPagoOrder>;
   getOrder(id: string): Promise<VerifiedOrder>;
